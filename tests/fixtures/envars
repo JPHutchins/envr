@@ -1,0 +1,6 @@
+[VARIABLES]
+FOO=bar
+    ANSWER=42
+                           SPACES=oh we got some spaces
+
+USER_VAR=user value overwritten
