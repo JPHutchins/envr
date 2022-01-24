@@ -7,7 +7,7 @@ OLD_PATH="$PATH"
 OLD_ALS=$(alias)
 OLD_PS1="${PS1:-}"
 
-. envr.ps1
+. ./envr.ps1
 
 # Python venv stuff is there
 assertEqual "$(pwd)/venv/bin:$OLD_PATH" "$PATH"
