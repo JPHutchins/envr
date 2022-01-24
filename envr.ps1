@@ -1,4 +1,4 @@
-# envar v0.0.0
+# envr v0.0.0
 # https://www.github.com/JPHutchins/envr
 # https://www.crumpledpaper.tech
 
