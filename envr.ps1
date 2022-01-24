@@ -9,6 +9,7 @@
 # Use with "source" from *bash* or *Windows PowerShell*
 # Usage:
 #   bash $> . envr.ps1
+#   zsh $> . ./envr.ps1
 #   WinPS $> . ./envr.ps1
 # You cannot use it directly; it will not set your environment variables.
 
@@ -303,7 +304,10 @@ _envr_bash_main () {
 }
 
 _envr_zsh_main () {
-    echo "TODO!"
+    # _envr_zsh_exit_if_not_sourced &&
+    echo "GO!"
+    _envr_check_for_config &&
+    echo $_ENVR_HAS_LOCAL_CONFIG
 }
 
 # detect shell and run main

@@ -9,7 +9,7 @@ OLD_PS1="${PS1:-}"
 
 assertContains "$PATH" "/usr/local/bin"
 
-. envr.ps1
+. ./envr.ps1
 
 assertEqual $OLD_ALS $(alias)
 

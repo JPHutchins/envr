@@ -17,7 +17,7 @@ OLD_PS1="${PS1:-}"
 
 assertContains "$OLD_ENV" "USER_VAR=original user value"
 
-. envr.ps1
+. ./envr.ps1
 
 assertNotEqual "$OLD_ENV" "$(printenv)"
 assertNotEqual "$OLD_PATH" "$PATH"
