@@ -30,9 +30,9 @@
 echo --% > /dev/null ; : ' | out-null
 <#'
 
-zsh_emulate_sh () {
+zsh_emulate_ksh () {
     if [[ -n "$ZSH_VERSION" ]] ; then
-        emulate -L sh
+        emulate -L ksh
     fi
 }
 
@@ -69,10 +69,18 @@ _envr_check_for_config () {
     fi
 }
 
-_envr_bash_unsource () {
+unsource () {
+    zsh_emulate_ksh
+
     # deactivate the python venv:
-    if [[ $(type -t deactivate) == function ]] ; then
-        deactivate
+    if [[ -n "${BASH:-}" ]] ; then
+        if [[ $(type -t deactivate) == function ]] ; then
+            deactivate
+        fi
+    elif [[ -n "${ZSH_VERSION:-}" ]] ; then
+        if [[ $(type deactivate) == function ]] ; then
+            deactivate
+        fi
     fi
 
     # reset to the old PATH:
@@ -88,14 +96,20 @@ _envr_bash_unsource () {
         export PS1
         unset _ENVR_OLD_ENVIRONMENT_PS1
     fi
-
+    
     # Remove added environment variables:
-    for env_var in "${_ENVR_NEW_ENVIRONMENT_VARS[@]}"; do
-        unset $(echo ${env_var/%=*/})
+    for (( i = 0; i <= ${#_ENVR_NEW_ENVIRONMENT_VARS[@]}; i++ )) ; do
+        local KEY=$(echo ${_ENVR_NEW_ENVIRONMENT_VARS[i]/%=*/})
+        if [[ -n "${KEY:-}" ]] ; then
+            unset $KEY
+        fi
     done
     # And restore any environment variables that were overwritten:
-    for env_var in "${_ENVR_OVERWRITTEN_ENVIRONMENT_VARS[@]}"; do
-        export "$env_var"
+    for (( i = 0; i <= ${#_ENVR_OVERWRITTEN_ENVIRONMENT_VARS[@]}; i++ )) ; do
+        local ENVAR=${_ENVR_OVERWRITTEN_ENVIRONMENT_VARS[i]}
+        if [[ -n "${ENVAR:-}" ]] ; then
+            export "$ENVAR"
+        fi
     done
 
     # Remove added aliases:
@@ -131,26 +145,6 @@ _envr_bash_unsource () {
     unset VIRTUAL_ENV_DISABLE_PROMPT
 }
 
-_envr_zsh_unsource () {
-    echo "TODO!"
-}
-
-unsource () {
-    # detect shell and run main
-    if [[ -n "${BASH:-}" ]] ; then
-        _envr_bash_unsource $1
-    elif [[ -n "${ZSH_VERSION:-}" ]] ; then
-        _envr_zsh_unsource $1
-    fi
-    
-    if [[ ! "${1:-}" = "nondestructive" ]] ; then
-    # Self destruct!
-        unset -f unsource
-        unset _ENVR_HAS_DEFAULT_CONFIG
-        unset _ENVR_HAS_LOCAL_CONFIG
-    fi
-}
-
 _envr_init_private_variables () {
     _ENVR_NEW_ENVIRONMENT_VARS=()
     _ENVR_OVERWRITTEN_ENVIRONMENT_VARS=()
@@ -159,7 +153,7 @@ _envr_init_private_variables () {
     _ENVR_NEW_PATH="$PATH"
 }
 
-_envr_bash_parse_config () {
+_envr_parse_config () {
     local config_file=$1
     local envr_config_category="INITIAL"
     local config_file_line_number=0
@@ -184,11 +178,16 @@ _envr_bash_parse_config () {
         # check for update to envr_config_category, choosing what is set
         if [[ "[" = $(echo ${line:0:1}) ]] ; then
             envr_config_category="$line"
-        
+    
         # set environment variables
         elif [[ "$envr_config_category" = "[VARIABLES]" ]] ; then
             # check if we are overwriting an environment variable
-            local OLD_VALUE=$(printf '%s\n' "${!KEY}")
+            if [[ -n "${BASH:-}" ]] ; then
+                local OLD_VALUE=$(printf '%s\n' "${!KEY}")
+            elif [[ -n "${ZSH_VERSION:-}" ]] ; then
+                local OLD_VALUE=$(printf '%s\n' "${(P)KEY}")
+            fi
+
             if [[ -n "$OLD_VALUE" ]] ; then
                 _ENVR_OVERWRITTEN_ENVIRONMENT_VARS+=("${KEY}=${OLD_VALUE}")
             fi 
@@ -281,10 +280,10 @@ _envr_bash_main () {
     
     # Parse the local or default config
     if [[ $_ENVR_HAS_LOCAL_CONFIG = 1 ]] ; then
-        _envr_bash_parse_config "envr-local"
+        _envr_parse_config "envr-local"
     else
         echo -e "\e[0;33mUsing envr-default config, make a local config with:\n\e[0mcp envr-default envr-local"
-        _envr_bash_parse_config "envr-default"
+        _envr_parse_config "envr-default"
     fi
 
     if [[ $? == 1 ]] ; then
@@ -305,9 +304,32 @@ _envr_bash_main () {
 
 _envr_zsh_main () {
     # _envr_zsh_exit_if_not_sourced &&
-    echo "GO!"
     _envr_check_for_config &&
-    echo $_ENVR_HAS_LOCAL_CONFIG
+    unsource nondestructive &&
+    _envr_init_private_variables &&
+
+    # Parse the local or default config
+    if [[ $_ENVR_HAS_LOCAL_CONFIG = 1 ]] ; then
+        _envr_parse_config "envr-local"
+    else
+        echo -e "\e[0;33mUsing envr-default config, make a local config with:\n\e[0mcp envr-default envr-local"
+        _envr_parse_config "envr-default"
+    fi
+
+    if [[ $? == 1 ]] ; then
+        unsource
+        return 1
+    fi
+
+    # Save the unmodified PATH and export the new one
+    _ENVR_OLD_PATH="$PATH"
+    PATH="$_ENVR_NEW_PATH"
+    export PATH
+
+    _envr_set_prompt_prefix &&
+    _envr_forget_hash &&
+    _envr_activate_python_venv
+    return 0
 }
 
 # detect shell and run main
@@ -315,6 +337,8 @@ if [[ -n "${BASH:-}" ]] ; then
     _envr_bash_main
 elif [[ -n "${ZSH_VERSION:-}" ]] ; then
     _envr_zsh_main
+else 
+    echo -e "\e[0;31mERROR - Your shell is untested and unsupported, use bash or zsh.\e[0m"         
 fi
 
 true << 'POWERSHELL_SECTION'
