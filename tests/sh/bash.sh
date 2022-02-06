@@ -1,5 +1,3 @@
-#!/bin/bash
-
 source tests/sh/helpers.sh
 
 echo -e "Running tests on GNU bash ${BASH_VERSION}"

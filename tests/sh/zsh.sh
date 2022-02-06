@@ -1,5 +1,3 @@
-#!/usr/bin/zsh
-
 source tests/sh/helpers.sh
 
 _ZSH_VERSION=$(zsh --version)
