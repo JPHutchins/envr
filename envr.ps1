@@ -210,11 +210,18 @@ _envr_parse_config () {
         # set aliases
         elif [[ "$envr_config_category" = "[ALIASES]" ]] ; then
             # check if we are overwriting an alias
-            if [[ "$(type -t ${KEY})" = "alias" ]] ; then
-                local ALIAS_OUTPUT=$(alias ${KEY})
-                local OLD_VALUE=$(echo ${ALIAS_OUTPUT#alias })
-                _ENVR_OVERWRITTEN_ALIASES+=("$OLD_VALUE")
-            fi 
+            if [[ -n "${BASH:-}" ]] ; then
+                if [[ "$(type -t ${KEY})" = "alias" ]] ; then
+                    local ALIAS_OUTPUT=$(alias ${KEY})
+                    local OLD_VALUE=$(echo ${ALIAS_OUTPUT#alias })
+                    _ENVR_OVERWRITTEN_ALIASES+=("$OLD_VALUE")
+                fi 
+            elif [[ -n "${ZSH_VERSION:-}" ]] ; then 
+                if [[ ${+aliases[${KEY}]} ]] ; then
+                    local OLD_VALUE=$(alias ${KEY})
+                    _ENVR_OVERWRITTEN_ALIASES+=("$OLD_VALUE")
+                fi 
+            fi
             alias "$line"
             _ENVR_NEW_ALIASES+=( "$line" )
 

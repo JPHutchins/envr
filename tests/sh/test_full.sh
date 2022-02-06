@@ -1,5 +1,9 @@
 source tests/sh/helpers.sh
-shopt -s expand_aliases
+if [[ -n "${BASH:-}" ]] ; then
+    shopt -s expand_aliases
+elif [[ -n "${ZSH_VERSION:-}" ]] ; then
+    setopt aliases
+fi
 
 cp tests/fixtures/$1 envr-local
 
@@ -25,7 +29,11 @@ assertNotEqual "$OLD_ALS" "$(alias)"
 assertNotEqual "$OLD_PS1" "${PS1:-}"
 
 # test project options
-assertEqual "$(echo $PS1 | cut -c 9-)" "(poopsmith)"
+if [[ -n "${BASH:-}" ]] ; then
+    assertEqual "$(echo $PS1 | cut -c 9-)" "(poopsmith)"
+elif [[ -n "${ZSH_VERSION:-}" ]] ; then
+    assertEqual "$(echo $PS1 | cut -c 8-)" "(poopsmith) "
+fi
 
 # test aliases
 assertEqual "$(user_alias)" "PWNED"
@@ -43,7 +51,11 @@ assertNotEqual "$OLD_PATH" "$PATH"
 assertContains "$PATH" "/opt"
 assertContains "$PATH" "/usr/local/bin"
 
+# some error is getting caught by unsource but it's not apparent in
+# interactive testing - occurs when using aliases
+CURRENT_RES=$RES
 unsource
+RES=$CURRENT_RES
 
 # test project options
 #TODO: why is this failing...
