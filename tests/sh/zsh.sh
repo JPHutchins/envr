@@ -17,9 +17,9 @@ runtest zsh aliases
 runtest zsh path
 
 # create a python venv
-# python3 -m venv venv
-# runtest zsh python_venv
-# rm -Rf venv
+python3 -m venv venv
+runtest zsh python_venv
+rm -Rf venv
 
 runtest zsh full
 
