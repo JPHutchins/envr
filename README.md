@@ -85,7 +85,7 @@ git checkout -b feature/my-feature-branch-name
   * Windows PS: `.\tests\windows\ps.ps1`
   * Windows WSL bash: `bash tests/sh/bash.sh`
   * Windows WSL bash with zsh installed: `bash tests/sh/zsh.sh`
-  * Linux bash: `tests/sh/bash.sh`
-  * Linux zsh: `tests/sh/zsh.sh`
-  * Linux all shells: `tests/sh/all.sh` *recommended to verify `bash` `zsh` compatibility.*
+  * Linux/macOS bash: `tests/sh/bash.sh`
+  * Linux/macOS zsh: `tests/sh/zsh.sh`
+  * Linux/macOS all shells: `tests/sh/all.sh` *recommended to verify `bash` `zsh` compatibility.*
 * Add tests for any new shell, feature, or compatibility update.
