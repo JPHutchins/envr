@@ -54,7 +54,7 @@ elif [[ -n "${ZSH_VERSION:-}" ]] ; then
         fi
     fi
 else 
-    echo -e "\e[0;31mERROR - Script was not sourced from zsh or bash.\e[0m"
+    echo -e "\033[0;31mERROR - Script was not sourced from zsh or bash.\033[0m"
     echo -e "Usage: prompt $> . envr.ps1"
     return 1         
 fi
