@@ -30,7 +30,7 @@ assertNotEqual "$OLD_PS1" "${PS1:-}"
 
 # test project options
 if [[ -n "${BASH:-}" ]] ; then
-    assertEqual "$(echo $PS1 | cut -c 9-)" "(poopsmith)"
+    assertEqual "$(echo $PS1 | cut -c 11-)" "(poopsmith)"
 elif [[ -n "${ZSH_VERSION:-}" ]] ; then
     assertEqual "$(echo $PS1 | cut -c 8-)" "(poopsmith) "
 fi

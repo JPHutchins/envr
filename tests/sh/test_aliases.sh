@@ -26,7 +26,7 @@ assertEqual "$(hello)" "Hello world!"
 
 # cut off the leading characters
 if [[ -n "${BASH:-}" ]] ; then
-    assertEqual "$(echo $PS1 | cut -c 9-)" "(envr)"
+    assertEqual "$(echo $PS1 | cut -c 11-)" "(envr)"
 elif [[ -n "${ZSH_VERSION:-}" ]] ; then
     assertEqual "$(echo $PS1 | cut -c 8-)" "(envr) "
 fi

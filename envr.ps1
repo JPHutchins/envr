@@ -62,7 +62,7 @@ _envr_check_for_config () {
     fi
 
     if [[ $(( (_ENVR_HAS_DEFAULT_CONFIG | _ENVR_HAS_LOCAL_CONFIG) )) = 0 ]] ; then
-        echo -e "\e[0;31mERROR: an envr-local or envr-default configuration file must exist.\e[0m"
+        echo -e "\033[0;31mERROR: an envr-local or envr-default configuration file must exist.\033[0m"
         unset _ENVR_HAS_DEFAULT_CONFIG
         unset _ENVR_HAS_LOCAL_CONFIG
         return 1
@@ -202,7 +202,7 @@ _envr_parse_config () {
                 "PYTHON_VENV")
                     _ENVR_PYTHON_VENV="$VALUE";;
                 *)
-                    echo -e "\e[0;31mERROR - line $config_file_line_number of ${config_file}: $line under section $envr_config_category unknown.\e[0m"
+                    echo -e "\033[0;31mERROR - line $config_file_line_number of ${config_file}: $line under section $envr_config_category unknown.\033[0m"
                     unsource
                     return 1;;
             esac
@@ -229,7 +229,7 @@ _envr_parse_config () {
         elif [[ "$envr_config_category" = "[ADD_TO_PATH]" ]] ; then
             # make sure that the directory exists
             if [[ ! -d "$VALUE" ]] ; then
-                echo -e "\e[0;31mERROR\e[0m - ${KEY}, line $config_file_line_number of ${config_file}: $VALUE is not a directory."
+                echo -e "\033[0;31mERROR\033[0m - ${KEY}, line $config_file_line_number of ${config_file}: $VALUE is not a directory."
                 return 1
             fi
             # don't add duplicate directories to PATH
@@ -240,7 +240,7 @@ _envr_parse_config () {
 
         # parsing error
         else
-            echo -e "\e[0;31mERROR\e[0m - line $config_file_line_number of ${config_file}: $line under section $envr_config_category unknown."
+            echo -e "\033[0;31mERROR\033[0m - line $config_file_line_number of ${config_file}: $line under section $envr_config_category unknown."
             return 1
         fi
     done 3< "$1"
@@ -254,7 +254,7 @@ _envr_set_prompt_prefix () {
         else
             _PROMPT="envr"
         fi
-        PS1="\e[0;36m(${_PROMPT}) ${PS1:-}"
+        PS1="\033[0;36m(${_PROMPT}) ${PS1:-}"
         export PS1
     fi
 }
@@ -289,7 +289,7 @@ _envr_bash_main () {
     if [[ $_ENVR_HAS_LOCAL_CONFIG = 1 ]] ; then
         _envr_parse_config "envr-local"
     else
-        echo -e "\e[0;33mUsing envr-default config, make a local config with:\n\e[0mcp envr-default envr-local"
+        echo -e "\033[0;33mUsing envr-default config, make a local config with:\n\033[0mcp envr-default envr-local"
         _envr_parse_config "envr-default"
     fi
 
@@ -319,7 +319,7 @@ _envr_zsh_main () {
     if [[ $_ENVR_HAS_LOCAL_CONFIG = 1 ]] ; then
         _envr_parse_config "envr-local"
     else
-        echo -e "\e[0;33mUsing envr-default config, make a local config with:\n\e[0mcp envr-default envr-local"
+        echo -e "\033[0;33mUsing envr-default config, make a local config with:\n\033[0mcp envr-default envr-local"
         _envr_parse_config "envr-default"
     fi
 
@@ -345,7 +345,7 @@ if [[ -n "${BASH:-}" ]] ; then
 elif [[ -n "${ZSH_VERSION:-}" ]] ; then
     _envr_zsh_main
 else 
-    echo -e "\e[0;31mERROR - Your shell is untested and unsupported, use bash or zsh.\e[0m"         
+    echo -e "\033[0;31mERROR - Your shell is untested and unsupported, use bash or zsh.\033[0m"         
 fi
 
 true << 'POWERSHELL_SECTION'
@@ -444,7 +444,7 @@ $_NEW_ALIASES = @()
 $_ALIAS_FN_INDEX = 0
 $_ALIAS_COMMAND_ARR = @()
 $_ALIAS_ARGS_ARR = @()
-foreach ($line in Get-Content .\envr-local) {
+foreach ($line in Get-Content .\033nvr-local) {
     # trim whitespace and continue if line is blank 
     $line = $line.Trim()
     if ($line -eq "") {

@@ -14,7 +14,7 @@ assertEqual "$OLD_ALS" "$(alias)"
 
 # cut off the leading characters
 if [[ -n "${BASH:-}" ]] ; then
-    assertEqual "$(echo $PS1 | cut -c 9-)" "(my long project name 1337 !_\$#? 3)"
+    assertEqual "$(echo $PS1 | cut -c 11-)" "(my long project name 1337 !_\$#? 3)"
 elif [[ -n "${ZSH_VERSION:-}" ]] ; then
     assertEqual "$(echo $PS1 | cut -c 8-)" "(my long project name 1337 !_\$#? 3) "
 fi

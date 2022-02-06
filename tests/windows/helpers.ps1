@@ -75,5 +75,5 @@ function global:runTest ($name) {
     else {
         Write-Host "`r$EMOJI_CROSS_MARK`n`t`t$name failed! $EMOJI_POOP" -ForegroundColor Red
     }
-    Remove-Item .\envr-local
+    Remove-Item .\033nvr-local
 }
