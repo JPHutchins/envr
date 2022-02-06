@@ -30,14 +30,8 @@
 echo --% > /dev/null ; : ' | out-null
 <#'
 
-zsh_emulate_ksh () {
-    if [[ -n "$ZSH_VERSION" ]] ; then
-        emulate -L ksh
-    fi
-}
-
-_envr_bash_exit_if_not_sourced () {
-    # Exit if the script is not being sourced
+# Check for bash or zsh then verify script is sourced
+if [[ -n "${BASH:-}" ]] ; then
     if [[ "${BASH_SOURCE[0]}" = "${0}" ]] ; then
         ARG1=$1
         if [[ -z "$ARG1" || $ARG1 = "-h" || $ARG1 = "--help" ]] ; then
@@ -47,6 +41,27 @@ _envr_bash_exit_if_not_sourced () {
             echo "Unknown argument: $ARG1"
             exit 1
         fi
+    fi
+elif [[ -n "${ZSH_VERSION:-}" ]] ; then
+    if [[ $ZSH_EVAL_CONTEXT = :file$ ]] ; then
+        ARG1=$1
+        if [[ -z "$ARG1" || $ARG1 = "-h" || $ARG1 = "--help" ]] ; then
+            echo -e "Usage: zsh $> . envr.ps1"
+            exit 1
+        else
+            echo "Unknown argument: $ARG1"
+            exit 1
+        fi
+    fi
+else 
+    echo -e "\e[0;31mERROR - Script was not sourced from zsh or bash.\e[0m"
+    echo -e "Usage: prompt $> . envr.ps1"
+    return 1         
+fi
+
+zsh_emulate_ksh () {
+    if [[ -n "$ZSH_VERSION" ]] ; then
+        emulate -L ksh
     fi
 }
 
@@ -279,8 +294,7 @@ _envr_activate_python_venv () {
     fi
 }
 
-_envr_bash_main () {
-    _envr_bash_exit_if_not_sourced &&
+_envr_main () {
     _envr_check_for_config &&
     unsource nondestructive &&
     _envr_init_private_variables &&
@@ -309,44 +323,8 @@ _envr_bash_main () {
     return 0
 }
 
-_envr_zsh_main () {
-    # _envr_zsh_exit_if_not_sourced &&
-    _envr_check_for_config &&
-    unsource nondestructive &&
-    _envr_init_private_variables &&
-
-    # Parse the local or default config
-    if [[ $_ENVR_HAS_LOCAL_CONFIG = 1 ]] ; then
-        _envr_parse_config "envr-local"
-    else
-        echo -e "\033[0;33mUsing envr-default config, make a local config with:\n\033[0mcp envr-default envr-local"
-        _envr_parse_config "envr-default"
-    fi
-
-    if [[ $? == 1 ]] ; then
-        unsource
-        return 1
-    fi
-
-    # Save the unmodified PATH and export the new one
-    _ENVR_OLD_PATH="$PATH"
-    PATH="$_ENVR_NEW_PATH"
-    export PATH
-
-    _envr_set_prompt_prefix &&
-    _envr_forget_hash &&
-    _envr_activate_python_venv
-    return 0
-}
-
-# detect shell and run main
-if [[ -n "${BASH:-}" ]] ; then
-    _envr_bash_main
-elif [[ -n "${ZSH_VERSION:-}" ]] ; then
-    _envr_zsh_main
-else 
-    echo -e "\033[0;31mERROR - Your shell is untested and unsupported, use bash or zsh.\033[0m"         
-fi
+# run main
+_envr_main
 
 true << 'POWERSHELL_SECTION'
 #>
