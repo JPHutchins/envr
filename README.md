@@ -60,14 +60,14 @@ Because PowerShell scripts don't run with any other extension.  If you don't wan
 
 # Support Status
 
-| Feature                                     | Windows PowerShell   | GNU bash 5.0.17(1)-release | zsh 5.8 (x86_64-ubuntu-linux-gnu) |
-| ------------------------------------------- | -------------------- | -------------------------- | --------------------------------- |
-| set/overwrite/restore environment variables | ✅                    | ✅                          | ✅                                 |
-| prompt shows active project name            | ✅                    | ✅                          | ✅                                 |
-| activate/deactivate python venv             | ✅  (needs unit test) | ✅                          | ✅                                 |
-| set aliases                                 | ✅                    | ✅                          | ✅                                 |
-| overwrite/restore aliases                   | ❌                    | ✅                          | ✅                                 |
-| add-to/restore PATH                         | ❌                    | ✅                          | ✅                                 |
+| Feature                                     | Windows PowerShell   | GNU bash 5.0.17(1)-release | zsh 5.8 (x86_64-ubuntu-linux-gnu) | GNU bash 3.2.57(1)-release | zsh 5.3 (x86_64-apple-darwin18.0) |
+| ------------------------------------------- | -------------------- | -------------------------- | --------------------------------- | -------------------------- | --------------------------------- |
+| set/overwrite/restore environment variables | ✅                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
+| prompt shows active project name            | ✅                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
+| activate/deactivate python venv             | ✅  (needs unit test) | ✅                          | ✅                                 | ✅                          | ✅                                 |
+| set aliases                                 | ✅                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
+| overwrite/restore aliases                   | ❌                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
+| add-to/restore PATH                         | ❌                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
 
 
 # envr testing and development

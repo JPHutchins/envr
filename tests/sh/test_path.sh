@@ -14,13 +14,13 @@ assertContains "$PATH" "/usr/local/bin"
 assertEqual "$OLD_ALS" "$(alias)"
 
 assertNotEqual "$OLD_PATH" "$PATH"
-assertContains "$PATH" "/opt"
+assertContains "$PATH" "/home"
 assertContains "$PATH" "/usr/local/bin"
 
 unsource
 
 assertEqual "$OLD_PATH" "$PATH"
-assertNotContains "$PATH" "/opt"
+assertNotContains "$PATH" "/home"
 assertContains "$PATH" "/usr/local/bin"
 
 exit $RES

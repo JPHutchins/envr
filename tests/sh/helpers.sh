@@ -1,8 +1,8 @@
 # Helper constants and functions for bash tests
 
-readonly GRN="\e[0;32m"
-readonly RED="\e[0;31m"
-readonly RST="\e[0m"
+readonly GRN="\033[0;32m"
+readonly RED="\033[0;31m"
+readonly RST="\033[0m"
 
 assertEqual () {
     if [[ $1 != $2 ]] ; then
