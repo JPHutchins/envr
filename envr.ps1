@@ -444,7 +444,7 @@ $_NEW_ALIASES = @()
 $_ALIAS_FN_INDEX = 0
 $_ALIAS_COMMAND_ARR = @()
 $_ALIAS_ARGS_ARR = @()
-foreach ($line in Get-Content .\033nvr-local) {
+foreach ($line in Get-Content .\envr-local) {
     # trim whitespace and continue if line is blank 
     $line = $line.Trim()
     if ($line -eq "") {
