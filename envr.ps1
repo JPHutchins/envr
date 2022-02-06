@@ -1,4 +1,4 @@
-# envar v0.0.0
+# envr v0.0.1
 # https://www.github.com/JPHutchins/envr
 # https://www.crumpledpaper.tech
 
@@ -9,6 +9,7 @@
 # Use with "source" from *bash* or *Windows PowerShell*
 # Usage:
 #   bash $> . envr.ps1
+#   zsh $> . ./envr.ps1
 #   WinPS $> . ./envr.ps1
 # You cannot use it directly; it will not set your environment variables.
 
@@ -29,49 +30,72 @@
 echo --% > /dev/null ; : ' | out-null
 <#'
 
-zsh_emulate_sh () {
+# Check for bash or zsh then verify script is sourced
+if [[ -n "${BASH:-}" ]] ; then
+    if [[ "${BASH_SOURCE[0]}" = "${0}" ]] ; then
+        ARG1=$1
+        if [[ -z "$ARG1" || $ARG1 = "-h" || $ARG1 = "--help" ]] ; then
+            echo -e "Usage: bash $> . envr.ps1"
+            exit 1
+        else
+            echo "Unknown argument: $ARG1"
+            exit 1
+        fi
+    fi
+elif [[ -n "${ZSH_VERSION:-}" ]] ; then
+    if [[ $ZSH_EVAL_CONTEXT = :file$ ]] ; then
+        ARG1=$1
+        if [[ -z "$ARG1" || $ARG1 = "-h" || $ARG1 = "--help" ]] ; then
+            echo -e "Usage: zsh $> . envr.ps1"
+            exit 1
+        else
+            echo "Unknown argument: $ARG1"
+            exit 1
+        fi
+    fi
+else 
+    echo -e "\033[0;31mERROR - Script was not sourced from zsh or bash.\033[0m"
+    echo -e "Usage: prompt $> . envr.ps1"
+    return 1         
+fi
+
+zsh_emulate_ksh () {
     if [[ -n "$ZSH_VERSION" ]] ; then
-        emulate -L sh
+        emulate -L ksh
     fi
 }
 
-zsh_emulate_sh
-
-# Exit if the script is not being sourced
-if [[ "${BASH_SOURCE[0]}" = "${0}" ]] ; then
-    ARG1=$1
-    if [[ -z "$ARG1" || $ARG1 = "-h" || $ARG1 = "--help" ]] ; then
-        echo -e "Usage: bash $> . envr.ps1"
-        exit 1
-    else
-        echo "Unknown argument: $ARG1"
-        exit 1
+_envr_check_for_config () {
+    _ENVR_HAS_DEFAULT_CONFIG=0
+    if [[ -f "envr-default" ]] ; then
+        _ENVR_HAS_DEFAULT_CONFIG=1
     fi
-fi
 
-_ENVR_HAS_DEFAULT_CONFIG=0
-if [[ -f "envr-default" ]] ; then
-    _ENVR_HAS_DEFAULT_CONFIG=1
-fi
+    _ENVR_HAS_LOCAL_CONFIG=0
+    if [[ -f "envr-local" ]] ; then
+        _ENVR_HAS_LOCAL_CONFIG=1
+    fi
 
-_ENVR_HAS_LOCAL_CONFIG=0
-if [[ -f "envr-local" ]] ; then
-    _ENVR_HAS_LOCAL_CONFIG=1
-fi
-
-if [[ $(( (_ENVR_HAS_DEFAULT_CONFIG | _ENVR_HAS_LOCAL_CONFIG) )) = 0 ]] ; then
-    echo -e "\e[0;31mERROR: an envr-local or envr-default configuration file must exist.\e[0m"
-    unset _ENVR_HAS_DEFAULT_CONFIG
-    unset _ENVR_HAS_LOCAL_CONFIG
-    return 1
-fi
+    if [[ $(( (_ENVR_HAS_DEFAULT_CONFIG | _ENVR_HAS_LOCAL_CONFIG) )) = 0 ]] ; then
+        echo -e "\033[0;31mERROR: an envr-local or envr-default configuration file must exist.\033[0m"
+        unset _ENVR_HAS_DEFAULT_CONFIG
+        unset _ENVR_HAS_LOCAL_CONFIG
+        return 1
+    fi
+}
 
 unsource () {
-    zsh_emulate_sh
+    zsh_emulate_ksh
 
     # deactivate the python venv:
-    if [[ $(type -t deactivate) == function ]] ; then
-        deactivate
+    if [[ -n "${BASH:-}" ]] ; then
+        if [[ $(type -t deactivate) == function ]] ; then
+            deactivate
+        fi
+    elif [[ -n "${ZSH_VERSION:-}" ]] ; then
+        if [[ $(type deactivate) == function ]] ; then
+            deactivate
+        fi
     fi
 
     # reset to the old PATH:
@@ -87,14 +111,20 @@ unsource () {
         export PS1
         unset _ENVR_OLD_ENVIRONMENT_PS1
     fi
-
+    
     # Remove added environment variables:
-    for env_var in "${_ENVR_NEW_ENVIRONMENT_VARS[@]}"; do
-        unset $(echo ${env_var/%=*/})
+    for (( i = 0; i <= ${#_ENVR_NEW_ENVIRONMENT_VARS[@]}; i++ )) ; do
+        local KEY=$(echo ${_ENVR_NEW_ENVIRONMENT_VARS[i]/%=*/})
+        if [[ -n "${KEY:-}" ]] ; then
+            unset $KEY
+        fi
     done
     # And restore any environment variables that were overwritten:
-    for env_var in "${_ENVR_OVERWRITTEN_ENVIRONMENT_VARS[@]}"; do
-        export "$env_var"
+    for (( i = 0; i <= ${#_ENVR_OVERWRITTEN_ENVIRONMENT_VARS[@]}; i++ )) ; do
+        local ENVAR=${_ENVR_OVERWRITTEN_ENVIRONMENT_VARS[i]}
+        if [[ -n "${ENVAR:-}" ]] ; then
+            export "$ENVAR"
+        fi
     done
 
     # Remove added aliases:
@@ -116,7 +146,6 @@ unsource () {
 
     if [[ ! "${1:-}" = "nondestructive" ]] ; then
     # Self destruct!
-        unset -f unsource
         unset _ENVR_HAS_DEFAULT_CONFIG
         unset _ENVR_HAS_LOCAL_CONFIG
     fi
@@ -131,19 +160,15 @@ unsource () {
     unset VIRTUAL_ENV_DISABLE_PROMPT
 }
 
-# unset irrelevant variables
-unsource nondestructive
+_envr_init_private_variables () {
+    _ENVR_NEW_ENVIRONMENT_VARS=()
+    _ENVR_OVERWRITTEN_ENVIRONMENT_VARS=()
+    _ENVR_NEW_ALIASES=()
+    _ENVR_OVERWRITTEN_ALIASES=()
+    _ENVR_NEW_PATH="$PATH"
+}
 
-# parse the environment file and setup
-_ENVR_NEW_ENVIRONMENT_VARS=()
-_ENVR_OVERWRITTEN_ENVIRONMENT_VARS=()
-_ENVR_NEW_ALIASES=()
-_ENVR_OVERWRITTEN_ALIASES=()
-_ENVR_NEW_PATH="$PATH"
-
-parse_config () {
-    zsh_emulate_sh
-
+_envr_parse_config () {
     local config_file=$1
     local envr_config_category="INITIAL"
     local config_file_line_number=0
@@ -168,11 +193,16 @@ parse_config () {
         # check for update to envr_config_category, choosing what is set
         if [[ "[" = $(echo ${line:0:1}) ]] ; then
             envr_config_category="$line"
-        
+    
         # set environment variables
         elif [[ "$envr_config_category" = "[VARIABLES]" ]] ; then
             # check if we are overwriting an environment variable
-            local OLD_VALUE=$(printf '%s\n' "${!KEY}")
+            if [[ -n "${BASH:-}" ]] ; then
+                local OLD_VALUE=$(printf '%s\n' "${!KEY}")
+            elif [[ -n "${ZSH_VERSION:-}" ]] ; then
+                local OLD_VALUE=$(printf '%s\n' "${(P)KEY}")
+            fi
+
             if [[ -n "$OLD_VALUE" ]] ; then
                 _ENVR_OVERWRITTEN_ENVIRONMENT_VARS+=("${KEY}=${OLD_VALUE}")
             fi 
@@ -187,7 +217,7 @@ parse_config () {
                 "PYTHON_VENV")
                     _ENVR_PYTHON_VENV="$VALUE";;
                 *)
-                    echo -e "\e[0;31mERROR - line $config_file_line_number of ${config_file}: $line under section $envr_config_category unknown.\e[0m"
+                    echo -e "\033[0;31mERROR - line $config_file_line_number of ${config_file}: $line under section $envr_config_category unknown.\033[0m"
                     unsource
                     return 1;;
             esac
@@ -195,11 +225,18 @@ parse_config () {
         # set aliases
         elif [[ "$envr_config_category" = "[ALIASES]" ]] ; then
             # check if we are overwriting an alias
-            if [[ "$(type -t ${KEY})" = "alias" ]] ; then
-                local ALIAS_OUTPUT=$(alias ${KEY})
-                local OLD_VALUE=$(echo ${ALIAS_OUTPUT#alias })
-                _ENVR_OVERWRITTEN_ALIASES+=("$OLD_VALUE")
-            fi 
+            if [[ -n "${BASH:-}" ]] ; then
+                if [[ "$(type -t ${KEY})" = "alias" ]] ; then
+                    local ALIAS_OUTPUT=$(alias ${KEY})
+                    local OLD_VALUE=$(echo ${ALIAS_OUTPUT#alias })
+                    _ENVR_OVERWRITTEN_ALIASES+=("$OLD_VALUE")
+                fi 
+            elif [[ -n "${ZSH_VERSION:-}" ]] ; then 
+                if [[ ${+aliases[${KEY}]} ]] ; then
+                    local OLD_VALUE=$(alias ${KEY})
+                    _ENVR_OVERWRITTEN_ALIASES+=("$OLD_VALUE")
+                fi 
+            fi
             alias "$line"
             _ENVR_NEW_ALIASES+=( "$line" )
 
@@ -207,7 +244,7 @@ parse_config () {
         elif [[ "$envr_config_category" = "[ADD_TO_PATH]" ]] ; then
             # make sure that the directory exists
             if [[ ! -d "$VALUE" ]] ; then
-                echo -e "\e[0;31mERROR\e[0m - ${KEY}, line $config_file_line_number of ${config_file}: $VALUE is not a directory."
+                echo -e "\033[0;31mERROR\033[0m - ${KEY}, line $config_file_line_number of ${config_file}: $VALUE is not a directory."
                 return 1
             fi
             # don't add duplicate directories to PATH
@@ -218,59 +255,78 @@ parse_config () {
 
         # parsing error
         else
-            echo -e "\e[0;31mERROR\e[0m - line $config_file_line_number of ${config_file}: $line under section $envr_config_category unknown."
+            echo -e "\033[0;31mERROR\033[0m - line $config_file_line_number of ${config_file}: $line under section $envr_config_category unknown."
             return 1
         fi
     done 3< "$1"
 }
 
-# Parse the local or default config
-if [[ $_ENVR_HAS_LOCAL_CONFIG = 1 ]] ; then
-    parse_config "envr-local"
-else
-    echo -e "\e[0;33mUsing envr-default config, make a local config with:\n\e[0mcp envr-default envr-local"
-    parse_config "envr-default"
-fi
-
-if [[ $? == 1 ]] ; then
-    unsource
-    return 1
-fi
-
-# Save the unmodified PATH and export the new one
-_ENVR_OLD_PATH="$PATH"
-PATH="$_ENVR_NEW_PATH"
-export PATH
-
-# Set the prompt prefix
-if [[ -z "${ENVIRONMENT_DISABLE_PROMPT:-}" ]] ; then
-    _ENVR_OLD_ENVIRONMENT_PS1="${PS1:-}"
-    if [[ -n "${_ENVR_PROJECT_NAME:-}" ]] ; then
-        _PROMPT="$_ENVR_PROJECT_NAME"
-    else
-        _PROMPT="envr"
-    fi
-	PS1="\e[0;36m(${_PROMPT}) ${PS1:-}"
-    export PS1
-fi
-
-# This should detect bash and zsh, which have a hash command that must
-# be called to get it to forget past commands.  Without forgetting
-# past commands the $PATH changes we made may not be respected
-if [ -n "${BASH:-}" -o -n "${ZSH_VERSION:-}" ] ; then
-    hash -r
-fi
-
-# Activate the python venv if specified
-if [[ -n "${_ENVR_PYTHON_VENV:-}" ]] ; then
+_envr_set_prompt_prefix () {
     if [[ -z "${ENVIRONMENT_DISABLE_PROMPT:-}" ]] ; then
-        # We're using the envr prompt; disable the python (venv) prompt
-        VIRTUAL_ENV_DISABLE_PROMPT="true"
+        _ENVR_OLD_ENVIRONMENT_PS1="${PS1:-}"
+        if [[ -n "${_ENVR_PROJECT_NAME:-}" ]] ; then
+            _PROMPT="$_ENVR_PROJECT_NAME"
+        else
+            _PROMPT="envr"
+        fi
+        PS1="\033[0;36m(${_PROMPT}) ${PS1:-}"
+        export PS1
     fi
-    source "${_ENVR_PYTHON_VENV}/bin/activate"
-fi
+}
 
-<< 'POWERSHELL_SECTION'
+_envr_forget_hash () {
+    # This should detect bash and zsh, which have a hash command that must
+    # be called to get it to forget past commands.  Without forgetting
+    # past commands the $PATH changes we made may not be respected
+    if [ -n "${BASH:-}" -o -n "${ZSH_VERSION:-}" ] ; then
+        hash -r
+    fi
+}
+
+_envr_activate_python_venv () {
+    # Activate the python venv if specified
+    if [[ -n "${_ENVR_PYTHON_VENV:-}" ]] ; then
+        if [[ -z "${ENVIRONMENT_DISABLE_PROMPT:-}" ]] ; then
+            # We're using the envr prompt; disable the python (venv) prompt
+            VIRTUAL_ENV_DISABLE_PROMPT="true"
+        fi
+        source "${_ENVR_PYTHON_VENV}/bin/activate"
+    fi
+}
+
+_envr_main () {
+    _envr_check_for_config &&
+    unsource nondestructive &&
+    _envr_init_private_variables &&
+    
+    # Parse the local or default config
+    if [[ $_ENVR_HAS_LOCAL_CONFIG = 1 ]] ; then
+        _envr_parse_config "envr-local"
+    else
+        echo -e "\033[0;33mUsing envr-default config, make a local config with:\n\033[0mcp envr-default envr-local"
+        _envr_parse_config "envr-default"
+    fi
+
+    if [[ $? == 1 ]] ; then
+        unsource
+        return 1
+    fi
+
+    # Save the unmodified PATH and export the new one
+    _ENVR_OLD_PATH="$PATH"
+    PATH="$_ENVR_NEW_PATH"
+    export PATH
+
+    _envr_set_prompt_prefix &&
+    _envr_forget_hash &&
+    _envr_activate_python_venv
+    return 0
+}
+
+# run main
+_envr_main
+
+true << 'POWERSHELL_SECTION'
 #>
 
 function global:unsource ([switch]$NonDestructive) {

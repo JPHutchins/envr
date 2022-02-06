@@ -4,7 +4,7 @@
 
 envr is a self-contained *cross-platform script* (envr.ps1) that allows developers to specify environment variables, aliases, and additions to the system path.
 
-The goal of envr is to unify the development environment of a repository by providing a consistent specification and interface.  envr unifies the setup documentation for Windows, MacOS, or GNU/Linux.
+The goal of envr is to unify the development environment setup of any repository by providing a consistent interface for Windows, MacOS, or GNU/Linux.
 
 # Usage
 
@@ -60,14 +60,14 @@ Because PowerShell scripts don't run with any other extension.  If you don't wan
 
 # Support Status
 
-| Feature                                     | Windows PowerShell   | GNU bash 5.0.17(1)-release | zsh |
-| ------------------------------------------- | -------------------- | -------------------------- | --- |
-| set/overwrite/restore environment variables | ✅                    | ✅                          | ❌   |
-| prompt shows active project name            | ✅                    | ✅                          | ❌   |
-| activate/deactivate python venv             | ✅  (needs unit test) | ✅                          | ❌   |
-| set aliases                                 | ✅                    | ✅                          | ❌   |
-| overwrite/restore aliases                   | ❌                    | ✅                          | ❌   |
-| add-to/restore PATH                         | ❌                    | ✅                          | ❌   |
+| Feature                                     | Windows PowerShell   | GNU bash 5.0.17(1)-release | zsh 5.8 (x86_64-ubuntu-linux-gnu) | GNU bash 3.2.57(1)-release | zsh 5.3 (x86_64-apple-darwin18.0) |
+| ------------------------------------------- | -------------------- | -------------------------- | --------------------------------- | -------------------------- | --------------------------------- |
+| set/overwrite/restore environment variables | ✅                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
+| prompt shows active project name            | ✅                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
+| activate/deactivate python venv             | ✅  (needs unit test) | ✅                          | ✅                                 | ✅                          | ✅                                 |
+| set aliases                                 | ✅                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
+| overwrite/restore aliases                   | ❌                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
+| add-to/restore PATH                         | ❌                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
 
 
 # envr testing and development
@@ -83,8 +83,9 @@ git checkout -b feature/my-feature-branch-name
 
 * Tests are run from this repository root.
   * Windows PS: `.\tests\windows\ps.ps1`
-  * Windows bash: `bash tests/sh/bash.sh`
-  * Linux bash: `tests/sh/bash.sh`
-  * Linux zsh: `tests/sh/zsh.sh` *everything is broken*
-  * Linux all shells: `tests/sh/all.sh` *recommended if working on `zsh` to verify `bash` compatibility.*
+  * Windows WSL bash: `bash tests/sh/bash.sh`
+  * Windows WSL bash with zsh installed: `bash tests/sh/zsh.sh`
+  * Linux/macOS bash: `tests/sh/bash.sh`
+  * Linux/macOS zsh: `tests/sh/zsh.sh`
+  * Linux/macOS all shells: `tests/sh/all.sh` *recommended to verify `bash` `zsh` compatibility.*
 * Add tests for any new shell, feature, or compatibility update.

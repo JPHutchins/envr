@@ -9,18 +9,18 @@ OLD_PS1="${PS1:-}"
 
 assertContains "$PATH" "/usr/local/bin"
 
-. envr.ps1
+. ./envr.ps1
 
-assertEqual $OLD_ALS $(alias)
+assertEqual "$OLD_ALS" "$(alias)"
 
 assertNotEqual "$OLD_PATH" "$PATH"
-assertContains "$PATH" "/opt"
+assertContains "$PATH" "/home"
 assertContains "$PATH" "/usr/local/bin"
 
 unsource
 
-assertEqual $OLD_PATH "$PATH"
-assertNotContains "$PATH" "/opt"
+assertEqual "$OLD_PATH" "$PATH"
+assertNotContains "$PATH" "/home"
 assertContains "$PATH" "/usr/local/bin"
 
 exit $RES

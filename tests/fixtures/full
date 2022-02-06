@@ -11,5 +11,5 @@
     SPACES=oh we got some spaces
     USER_VAR=user value overwritten
 [ADD_TO_PATH]
-    OPT_HAHA=/opt
+    HOME_HAHA=/home
     USR_LOCAL_BIN=/usr/local/bin

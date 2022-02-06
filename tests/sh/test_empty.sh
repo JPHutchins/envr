@@ -13,7 +13,11 @@ assertEqual "$OLD_PATH" "$PATH"
 assertEqual "$OLD_ALS" "$(alias)"
 
 # cut off the leading characters
-assertEqual "$(echo $PS1 | cut -c 9-)" "(envr)"
+if [[ -n "${BASH:-}" ]] ; then
+    assertEqual "$(echo $PS1 | cut -c 11-)" "(envr)"
+elif [[ -n "${ZSH_VERSION:-}" ]] ; then
+    assertEqual "$(echo $PS1 | cut -c 8-)" "(envr) "
+fi
 
 unsource
 
