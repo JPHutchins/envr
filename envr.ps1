@@ -410,6 +410,17 @@ function global:unsource ([switch]$NonDestructive) {
     }
 }
 
+# Check for config
+if (Test-Path -Path envr-local) {
+    $_ENVR_CONFIG = "envr-local"
+} elseif (Test-Path -Path envr-default) {
+    $_ENVR_CONFIG = "envr-default"
+} else {
+    Write-Host "ERROR: an envr-local or envr-default configuration file must exist." -ForegroundColor Red
+    unsource
+    return
+}
+
 # Deactivate any currently active virtual environment, but leave the
 # deactivate function in place.
 unsource -nondestructive
@@ -422,7 +433,7 @@ $_NEW_ALIASES = @()
 $_ALIAS_FN_INDEX = 0
 $_ALIAS_COMMAND_ARR = @()
 $_ALIAS_ARGS_ARR = @()
-foreach ($line in Get-Content .\envr-local) {
+foreach ($line in Get-Content $_ENVR_CONFIG) {
     # trim whitespace and continue if line is blank 
     $line = $line.Trim()
     if ($line -eq "") {
