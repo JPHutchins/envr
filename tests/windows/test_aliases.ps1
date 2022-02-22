@@ -7,7 +7,9 @@ function global:aliases () {
     $contains_hello = Test-Path -Path alias:hello
     assertEqual False $contains_hello
 
-    Set-Alias -Name user_alias -Value pwd
+    function _user_alias_fn () {return "original user alias"}
+    Set-Alias -Name user_alias -Value _user_alias_fn -Option AllScope
+    assertEqual "original user alias" $(user_alias)
 
     $contains_user_alias = Test-Path -Path alias:user_alias
     assertEqual True $contains_user_alias
@@ -17,8 +19,9 @@ function global:aliases () {
     $contains_hello = Test-Path -Path alias:hello
     assertEqual True $contains_hello
 
-    $out = hello
-    assertEqual "$out" "Hello world!"
+    assertEqual "Hello world!" $(hello)
+
+    assertEqual "PWNED" $(user_alias)
 
     unsource
 
@@ -27,6 +30,10 @@ function global:aliases () {
 
     $contains_user_alias = Test-Path -Path alias:user_alias
     assertEqual True $contains_user_alias
+    
+    assertEqual "original user alias" $(user_alias)
+
+    Remove-Item -Path alias:user_alias -Force
 
     return $RES
 }

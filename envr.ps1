@@ -381,6 +381,14 @@ function global:unsource ([switch]$NonDestructive) {
             echo "WARNING: alias $KEY was removed already!"
         }
     }
+    # And restore any aliases that were overwritten:
+    foreach ($alias in $_OVERWRITTEN_ALIASES) {
+        $_TEMP_ARRAY = $alias.split("=")
+        $KEY = $_TEMP_ARRAY[0]
+        $VALUE = $_TEMP_ARRAY[1]
+
+        Set-Alias $KEY $VALUE -Scope Global -Option AllScope -Force
+    }
 
     # Leave unsource function in the global namespace if requested:
     if (-not $NonDestructive) {
@@ -430,6 +438,7 @@ $_CATEGORY = "INITIAL"
 $_NEW_ENVIRONMENT_VARS = @()
 $_OVERWRITTEN_ENVIRONMENT_VARS = @()
 $_NEW_ALIASES = @()
+$_OVERWRITTEN_ALIASES = @()
 $_ALIAS_FN_INDEX = 0
 $_ALIAS_COMMAND_ARR = @()
 $_ALIAS_ARGS_ARR = @()
@@ -479,8 +488,9 @@ foreach ($line in Get-Content $_ENVR_CONFIG) {
     elseif ($_CATEGORY -eq "[ALIASES]") {
         # check if we are overwriting an alias
         if (Test-Path -Path alias:$KEY) {
-            Write-Host "WARNING - will not overwrite existing alias $Key" -ForegroundColor Yellow
-            continue
+            $_OLD_ALIAS = $((Get-Alias $KEY).Definition)
+            $_OVERWRITTEN_ALIASES += "$KEY=$_OLD_ALIAS"
+            Remove-Item -Path Alias:$KEY
         }
         if ($_ALIAS_FN_INDEX -eq 10) {
             echo "ERROR: only $_ALIAS_FN_INDEX aliases allowed!"
