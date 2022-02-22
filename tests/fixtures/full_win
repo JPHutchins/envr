@@ -1,0 +1,14 @@
+# An example using all categories other than venv
+
+[PROJECT_OPTIONS]
+    PROJECT_NAME=poopsmith
+[ALIASES]
+    hello=echo Hello world!
+    user_alias=echo PWNED
+[VARIABLES]
+    FOO=bar
+    ANSWER=42
+    SPACES=oh we got some spaces
+    USER_VAR=user value overwritten
+[ADD_TO_PATH]
+    HOME_HAHA=C:\Users
