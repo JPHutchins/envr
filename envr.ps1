@@ -245,6 +245,7 @@ _envr_parse_config () {
             # make sure that the directory exists
             if [[ ! -d "$VALUE" ]] ; then
                 echo -e "\033[0;31mERROR\033[0m - ${KEY}, line $config_file_line_number of ${config_file}: $VALUE is not a directory."
+                unsource
                 return 1
             fi
             # don't add duplicate directories to PATH
@@ -335,6 +336,12 @@ function global:unsource ([switch]$NonDestructive) {
     # Deactivate the python venv:
     if (Test-Path -Path Function:deactivate) {
         deactivate
+    }
+
+    # Reset to the old PATH:
+    if (Test-Path -Path Env:_OLD_PATH) {
+        Copy-Item -Path Env:_OLD_PATH -Destination Env:PATH
+        Remove-Item -Path Env:_OLD_PATH
     }
 
     # The prior prompt:
@@ -433,6 +440,9 @@ if (Test-Path -Path envr-local) {
 # deactivate function in place.
 unsource -nondestructive
 
+# Save the old path
+Copy-Item -Path Env:PATH -Destination Env:_OLD_PATH
+
 # parse the environment file and setup
 $_CATEGORY = "INITIAL"
 $_NEW_ENVIRONMENT_VARS = @()
@@ -523,9 +533,22 @@ foreach ($line in Get-Content $_ENVR_CONFIG) {
 
     # add to PATH
     elseif ($_CATEGORY -eq "[ADD_TO_PATH]") {
-        echo "ERROR: Add to path is not supported in PowerShell yet!"
-        unsource
-        return 1
+        if (Test-Path -Path $VALUE) {
+        } else {
+            Write-Host "$VALUE is not a directory." -ForegroundColor Red
+            unsource
+            return
+        }
+        foreach ($folder in $(Get-Item env:path).value.split($([System.IO.Path]::PathSeparator))) {
+            if ($folder -eq $VALUE) {
+                $duplicate = 1
+            }
+        }
+        if ($duplicate -eq 1) {
+            continue
+        }
+
+        $Env:PATH = "$VALUE$([System.IO.Path]::PathSeparator)$Env:PATH"
     }
 }
 
