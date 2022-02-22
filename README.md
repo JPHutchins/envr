@@ -66,8 +66,8 @@ Because PowerShell scripts don't run with any other extension.  If you don't wan
 | prompt shows active project name            | ✅                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
 | activate/deactivate python venv             | ✅  (needs unit test) | ✅                          | ✅                                 | ✅                          | ✅                                 |
 | set aliases                                 | ✅                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
-| overwrite/restore aliases                   | ❌                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
-| add-to/restore PATH                         | ❌                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
+| overwrite/restore aliases                   | ✅                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
+| add-to/restore PATH                         | ✅                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
 
 
 # envr testing and development
