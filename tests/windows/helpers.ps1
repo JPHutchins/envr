@@ -25,7 +25,7 @@ function global:assertContains ($container, $item) {
         Write-Host ". " -ForegroundColor Green -NoNewline
     }
     else {
-        Write-Host "$container contains $item" -ForegroundColor Red -NoNewline
+        Write-Host "$container does not contain $item" -ForegroundColor Red -NoNewline
         $global:RES = 1
     }
 }
