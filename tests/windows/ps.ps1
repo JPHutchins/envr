@@ -3,6 +3,8 @@
 . tests/windows/test_envars.ps1
 . tests/windows/test_project_options.ps1
 . tests/windows/test_aliases.ps1
+. tests/windows/test_path.ps1
+. tests/windows/test_full.ps1
 
 Write-Output "Running tests on Windows PowerShell"
 
@@ -10,4 +12,5 @@ runTest empty
 runTest envars
 runTest project_options
 runTest aliases
-
+runTest path_win
+runTest full_win

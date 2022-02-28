@@ -1,4 +1,4 @@
-# envr v0.0.1
+# envr v0.0.2
 # https://www.github.com/JPHutchins/envr
 # https://www.crumpledpaper.tech
 
@@ -245,6 +245,7 @@ _envr_parse_config () {
             # make sure that the directory exists
             if [[ ! -d "$VALUE" ]] ; then
                 echo -e "\033[0;31mERROR\033[0m - ${KEY}, line $config_file_line_number of ${config_file}: $VALUE is not a directory."
+                unsource
                 return 1
             fi
             # don't add duplicate directories to PATH
@@ -337,6 +338,12 @@ function global:unsource ([switch]$NonDestructive) {
         deactivate
     }
 
+    # Reset to the old PATH:
+    if (Test-Path -Path Env:_OLD_PATH) {
+        Copy-Item -Path Env:_OLD_PATH -Destination Env:PATH
+        Remove-Item -Path Env:_OLD_PATH
+    }
+
     # The prior prompt:
     if (Test-Path -Path Function:_OLD_VIRTUAL_PROMPT) {
         Copy-Item -Path Function:_OLD_VIRTUAL_PROMPT -Destination Function:prompt
@@ -381,6 +388,14 @@ function global:unsource ([switch]$NonDestructive) {
             echo "WARNING: alias $KEY was removed already!"
         }
     }
+    # And restore any aliases that were overwritten:
+    foreach ($alias in $_OVERWRITTEN_ALIASES) {
+        $_TEMP_ARRAY = $alias.split("=")
+        $KEY = $_TEMP_ARRAY[0]
+        $VALUE = $_TEMP_ARRAY[1]
+
+        Set-Alias $KEY $VALUE -Scope Global -Option AllScope -Force
+    }
 
     # Leave unsource function in the global namespace if requested:
     if (-not $NonDestructive) {
@@ -410,19 +425,34 @@ function global:unsource ([switch]$NonDestructive) {
     }
 }
 
+# Check for config
+if (Test-Path -Path envr-local) {
+    $_ENVR_CONFIG = "envr-local"
+} elseif (Test-Path -Path envr-default) {
+    $_ENVR_CONFIG = "envr-default"
+} else {
+    Write-Host "ERROR: an envr-local or envr-default configuration file must exist." -ForegroundColor Red
+    unsource
+    return
+}
+
 # Deactivate any currently active virtual environment, but leave the
 # deactivate function in place.
 unsource -nondestructive
+
+# Save the old path
+Copy-Item -Path Env:PATH -Destination Env:_OLD_PATH
 
 # parse the environment file and setup
 $_CATEGORY = "INITIAL"
 $_NEW_ENVIRONMENT_VARS = @()
 $_OVERWRITTEN_ENVIRONMENT_VARS = @()
 $_NEW_ALIASES = @()
+$_OVERWRITTEN_ALIASES = @()
 $_ALIAS_FN_INDEX = 0
 $_ALIAS_COMMAND_ARR = @()
 $_ALIAS_ARGS_ARR = @()
-foreach ($line in Get-Content .\envr-local) {
+foreach ($line in Get-Content $_ENVR_CONFIG) {
     # trim whitespace and continue if line is blank 
     $line = $line.Trim()
     if ($line -eq "") {
@@ -468,8 +498,9 @@ foreach ($line in Get-Content .\envr-local) {
     elseif ($_CATEGORY -eq "[ALIASES]") {
         # check if we are overwriting an alias
         if (Test-Path -Path alias:$KEY) {
-            Write-Host "WARNING - will not overwrite existing alias $Key" -ForegroundColor Yellow
-            continue
+            $_OLD_ALIAS = $((Get-Alias $KEY).Definition)
+            $_OVERWRITTEN_ALIASES += "$KEY=$_OLD_ALIAS"
+            Remove-Item -Path Alias:$KEY
         }
         if ($_ALIAS_FN_INDEX -eq 10) {
             echo "ERROR: only $_ALIAS_FN_INDEX aliases allowed!"
@@ -478,7 +509,12 @@ foreach ($line in Get-Content .\envr-local) {
         $_TEMP_ARRAY = $VALUE.split(" ")
         $_ALIAS_COMMAND_ARR += ,$_TEMP_ARRAY[0]
         if ($_TEMP_ARRAY.Length -ge 2) {
-            $_ALIAS_ARGS_ARR += ,$_TEMP_ARRAY[1..($_TEMP_ARRAY.Length-1)]
+            $args = @()
+            for (($i = 1); $i -lt $_TEMP_ARRAY.Length; $i++) {
+                # Expand the args to use any environment variables 
+                $args += ,$ExecutionContext.InvokeCommand.ExpandString($_TEMP_ARRAY[$i])
+            }
+            $_ALIAS_ARGS_ARR += ,$args
         }
         else {
             $_ALIAS_ARGS_ARR += ,""
@@ -502,9 +538,22 @@ foreach ($line in Get-Content .\envr-local) {
 
     # add to PATH
     elseif ($_CATEGORY -eq "[ADD_TO_PATH]") {
-        echo "ERROR: Add to path is not supported in PowerShell yet!"
-        unsource
-        return 1
+        if (Test-Path -Path $VALUE) {
+        } else {
+            Write-Host "$VALUE is not a directory." -ForegroundColor Red
+            unsource
+            return
+        }
+        foreach ($folder in $(Get-Item env:path).value.split($([System.IO.Path]::PathSeparator))) {
+            if ($folder -eq $VALUE) {
+                $duplicate = 1
+            }
+        }
+        if ($duplicate -eq 1) {
+            continue
+        }
+
+        $Env:PATH = "$VALUE$([System.IO.Path]::PathSeparator)$Env:PATH"
     }
 }
 
