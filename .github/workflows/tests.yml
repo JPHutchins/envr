@@ -21,7 +21,7 @@ jobs:
 
       - name: Test WSL bash on ${{ matrix.os }}
         if: ${{ contains(matrix.os, 'windows') }}
-        run: ./tests/sh/bash.sh
+        run: bash tests/sh/bash.sh
 
       - name: Test bash on ${{ matrix.os }}
         if: ${{ !contains(matrix.os, 'windows') }}
