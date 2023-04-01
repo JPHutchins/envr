@@ -14,15 +14,18 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Test PowerShell on ${{ matrix.os }}
+      - uses: actions/checkout@v3
       - if: ${{ contains(matrix.os, 'windows') }}
         shell: pwsh
         run: .\tests\windows\ps.ps1
 
       - name: Test bash on ${{ matrix.os }}
+      - uses: actions/checkout@v3
       - if: ${{ !contains(matrix.os, 'windows') }}
         run: tests/sh/bash.sh
 
       - name: Test zsh on ${{ matrix.os }}
+      - uses: actions/checkout@v3
       - if: ${{ !contains(matrix.os, 'windows') }}
         run: tests/sh/zsh.sh
 
