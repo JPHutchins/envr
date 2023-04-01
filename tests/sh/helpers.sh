@@ -54,7 +54,7 @@ zsh_emulate_sh () {
 
 runtest () {
     echo -n -e "\tTesting $2 "
-    env -i /usr/bin/$1 tests/sh/test_$2.sh $2
+    env -i $1 tests/sh/test_$2.sh $2
     if [[ $? != 0 ]] ; then
         fail "$2 failed! 💩"
         return 1
