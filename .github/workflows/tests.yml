@@ -25,7 +25,7 @@ jobs:
         run: tests/sh/bash.sh
 
       - name: Install zsh on ${{ matrix.os }}
-        if: ${{ !contains(matrix.os, 'ubuntu') }}
+        if: ${{ contains(matrix.os, 'ubuntu') }}
         run: sudo apt update && sudo apt install zsh -y
 
       - name: Test zsh on ${{ matrix.os }}
