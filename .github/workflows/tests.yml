@@ -15,18 +15,15 @@ jobs:
     steps:
       - name: Test PowerShell on ${{ matrix.os }}
         if: ${{ contains(matrix.os, 'windows') }}
-        uses: actions/checkout@v3
         shell: pwsh
         run: .\tests\windows\ps.ps1
 
       - name: Test bash on ${{ matrix.os }}
         if: ${{ !contains(matrix.os, 'windows') }}
-        uses: actions/checkout@v3
         run: tests/sh/bash.sh
 
       - name: Test zsh on ${{ matrix.os }}
         if: ${{ !contains(matrix.os, 'windows') }}
-        uses: actions/checkout@v3
         run: tests/sh/zsh.sh
 
           
