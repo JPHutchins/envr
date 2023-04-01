@@ -24,10 +24,11 @@ jobs:
         if: ${{ !contains(matrix.os, 'windows') }}
         run: tests/sh/bash.sh
 
-      - name: Test zsh on ${{ matrix.os }}
+      - name: Install zsh on ${{ matrix.os }}
         if: ${{ !contains(matrix.os, 'ubuntu') }}
         run: sudo apt update && sudo apt install zsh -y
-        shell: zsh {0}
+
+      - name: Test zsh on ${{ matrix.os }}
         if: ${{ !contains(matrix.os, 'windows') }}
         run: tests/sh/zsh.sh
 
