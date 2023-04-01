@@ -1,0 +1,31 @@
+name: Test envr.ps1
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_requests:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [windows-latest, windows-2019, ubuntu-latest, ubuntu-20.04, macos-latest, macos-11]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Test PowerShell on ${{ matrix.os }}
+      - if: ${{ contains(matrix.os, 'windows') }}
+        shell: pwsh
+        run: .\tests\windows\ps.ps1
+
+      - name: Test bash on ${{ matrix.os }}
+      - if: ${{ !contains(matrix.os, 'windows') }}
+        run: tests/sh/bash.sh
+
+      - name: Test zsh on ${{ matrix.os }}
+      - if: ${{ !contains(matrix.os, 'windows') }}
+        run: tests/sh/zsh.sh
+
+          
