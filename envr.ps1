@@ -521,7 +521,7 @@ foreach ($line in Get-Content $_ENVR_CONFIG) {
         $_ALIAS_COMMAND_ARR += ,$_TEMP_ARRAY[0]
         if ($_TEMP_ARRAY.Length -ge 2) {
             $args = @()
-            for (($i = 1); $i -lt $_TEMP_ARRAY.Length + 1; $i++) {
+            for (($i = 1); $i -lt $_TEMP_ARRAY.Length; $i++) {
                 # Expand the args to use any environment variables 
                 $args += ,$ExecutionContext.InvokeCommand.ExpandString($_TEMP_ARRAY[$i])
             }
