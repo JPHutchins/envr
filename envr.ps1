@@ -1,4 +1,4 @@
-# envr v0.0.2
+# envr v0.3.1
 # https://www.github.com/JPHutchins/envr
 # https://www.crumpledpaper.tech
 
@@ -158,6 +158,8 @@ unsource () {
     unset _ENVR_OVERWRITTEN_ALIASES
     unset _ENVR_NEW_PATH
     unset VIRTUAL_ENV_DISABLE_PROMPT
+    unset ENVR_ROOT
+    unset ENVR_PROJECT_NAME
 }
 
 _envr_init_private_variables () {
@@ -169,14 +171,27 @@ _envr_init_private_variables () {
 }
 
 _envr_parse_config () {
+    ENVR_ROOT=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+    export ENVR_ROOT="$ENVR_ROOT"
+
     local config_file=$1
     local envr_config_category="INITIAL"
     local config_file_line_number=0
 
     while IFS= read -r line <&3 || [[ -n "$line" ]] ; do
         config_file_line_number=$((config_file_line_number + 1))
-        # trim whitespace and continue if line is blank
-        local line=$(echo "$line" | xargs)
+
+        # expand variables and trim whitespace and continue if line is blank
+        if [[ -n "${BASH:-}" ]] ; then
+            if [[ $(printf %.1s $BASH_VERSION) -ge 5 ]] ; then
+                local line="$(echo "${line@P}" | xargs)"
+            else  # bash < 4.4 doesn't have @P
+                local line="$(eval echo "$line" | xargs)"
+            fi
+        elif [[ -n "${ZSH_VERSION:-}" ]] ; then
+            local line="$(echo "${(e)line}" | xargs)"
+        fi
+
         if [[ "$line" = "" ]] ; then
             continue
         fi
@@ -213,7 +228,8 @@ _envr_parse_config () {
         elif [[ "$envr_config_category" = "[PROJECT_OPTIONS]" ]] ; then
             case "$KEY" in
                 "PROJECT_NAME")
-                    _ENVR_PROJECT_NAME="$VALUE";;
+                    _ENVR_PROJECT_NAME="$VALUE"
+                    export ENVR_PROJECT_NAME=$_ENVR_PROJECT_NAME;;
                 "PYTHON_VENV")
                     _ENVR_PYTHON_VENV="$VALUE";;
                 *)
@@ -371,7 +387,7 @@ function global:unsource ([switch]$NonDestructive) {
         $VALUE = $_TEMP_ARRAY[1]
 
         if (Test-Path -Path env:$KEY) {
-            echo "ERROR: $KEY should have been removed already!"
+            Write-Host "ERROR: $KEY should have been removed already!"
             return 1
         }
         Set-Item -Path env:$KEY -Value $VALUE
@@ -385,7 +401,7 @@ function global:unsource ([switch]$NonDestructive) {
             Remove-Item alias:$KEY
         }
         else {
-            echo "WARNING: alias $KEY was removed already!"
+            Write-Host "WARNING: alias $KEY was removed already!"
         }
     }
     # And restore any aliases that were overwritten:
@@ -401,6 +417,10 @@ function global:unsource ([switch]$NonDestructive) {
     if (-not $NonDestructive) {
         Remove-Item -Path function:unsource
     }
+
+    if (Get-Variable -Name "ENVR_ROOT" -ErrorAction SilentlyContinue) {
+        Remove-Variable -Name ENVR_ROOT -Scope Global -Force
+    } 
 
     # Remove variables leftover from script run
     # $_VAR_REMOVE_LIST = 
@@ -452,6 +472,11 @@ $_OVERWRITTEN_ALIASES = @()
 $_ALIAS_FN_INDEX = 0
 $_ALIAS_COMMAND_ARR = @()
 $_ALIAS_ARGS_ARR = @()
+
+New-Variable -Name ENVR_ROOT -Description "envr parent folder path" -Scope Global -Option ReadOnly -Visibility Public -Value "$PSScriptRoot"
+Set-Item -Path env:ENVR_ROOT -Value $ENVR_ROOT
+$_NEW_ENVIRONMENT_VARS += "ENVR_ROOT=$ENVR_ROOT"
+
 foreach ($line in Get-Content $_ENVR_CONFIG) {
     # trim whitespace and continue if line is blank 
     $line = $line.Trim()
@@ -468,6 +493,9 @@ foreach ($line in Get-Content $_ENVR_CONFIG) {
     $_TEMP_ARRAY = $line.split("=")
     $KEY = $_TEMP_ARRAY[0]
     $VALUE = $_TEMP_ARRAY[1]
+    if ($null -ne $VALUE) {
+        $VALUE = $ExecutionContext.InvokeCommand.ExpandString($VALUE.Replace('$', '$env:'))
+    }
 
     # check for update to _CATEGORY, choosing what is set
     if ($line.SubString(0,1) -eq "[") {
@@ -482,14 +510,18 @@ foreach ($line in Get-Content $_ENVR_CONFIG) {
             $_OVERWRITTEN_ENVIRONMENT_VARS += "$KEY=$OLD_VALUE"
         }
         Set-Item -Path env:$KEY -Value $VALUE
-        $_NEW_ENVIRONMENT_VARS += $line
+        $_NEW_ENVIRONMENT_VARS += "$KEY=$VALUE"
     }
 
     # set project options
     elseif ($_CATEGORY -eq "[PROJECT_OPTIONS]") {
         switch ($KEY)
         {
-            "PROJECT_NAME" { $_PROJECT_NAME = $VALUE }
+            "PROJECT_NAME" { 
+                $_PROJECT_NAME = $VALUE
+                Set-Item -Path env:ENVR_PROJECT_NAME -Value $VALUE
+                $_NEW_ENVIRONMENT_VARS += "ENVR_PROJECT_NAME=$VALUE"
+            }
             "PYTHON_VENV" { $_PYTHON_VENV = $VALUE }
         }
     }
@@ -503,18 +535,18 @@ foreach ($line in Get-Content $_ENVR_CONFIG) {
             Remove-Item -Path Alias:$KEY
         }
         if ($_ALIAS_FN_INDEX -eq 10) {
-            echo "ERROR: only $_ALIAS_FN_INDEX aliases allowed!"
+            Write-Host "ERROR: only $_ALIAS_FN_INDEX aliases allowed!"
             return 1
         }
         $_TEMP_ARRAY = $VALUE.split(" ")
         $_ALIAS_COMMAND_ARR += ,$_TEMP_ARRAY[0]
         if ($_TEMP_ARRAY.Length -ge 2) {
-            $args = @()
+            $_args = @()
             for (($i = 1); $i -lt $_TEMP_ARRAY.Length; $i++) {
                 # Expand the args to use any environment variables 
-                $args += ,$ExecutionContext.InvokeCommand.ExpandString($_TEMP_ARRAY[$i])
+                $_args += ,$ExecutionContext.InvokeCommand.ExpandString($_TEMP_ARRAY[$i])
             }
-            $_ALIAS_ARGS_ARR += ,$args
+            $_ALIAS_ARGS_ARR += ,$_args
         }
         else {
             $_ALIAS_ARGS_ARR += ,""

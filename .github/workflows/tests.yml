@@ -30,5 +30,3 @@ jobs:
       - name: Test zsh on ${{ matrix.os }}
         if: ${{ !contains(matrix.os, 'windows') }}
         run: tests/sh/zsh.sh
-
-          
