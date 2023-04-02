@@ -1,4 +1,4 @@
-# envr v0.3.0
+# envr v0.3.1
 # https://www.github.com/JPHutchins/envr
 # https://www.crumpledpaper.tech
 
@@ -183,7 +183,11 @@ _envr_parse_config () {
 
         # expand variables and trim whitespace and continue if line is blank
         if [[ -n "${BASH:-}" ]] ; then
-            local line="$(echo "${line@P}" | xargs)"
+            if [[ $(printf %.1s $BASH_VERSION) -ge 5 ]] ; then
+                local line="$(echo "${line@P}" | xargs)"
+            else  # bash < 4.4 doesn't have @P
+                local line="$(eval echo "$line" | xargs)"
+            fi
         elif [[ -n "${ZSH_VERSION:-}" ]] ; then
             local line="$(echo "${(e)line}" | xargs)"
         fi
