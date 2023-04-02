@@ -1,4 +1,6 @@
 function global:project_options () {
+    $TEST_RES = 0
+
     . tests/windows/helpers.ps1
 
     $OLD_PS1_OUT = prompt 6>&1
@@ -6,12 +8,12 @@ function global:project_options () {
     . ./envr.ps1
 
     $PS1_OUT = prompt 6>&1
-    assertEqual "(my long project name 1337 !_$#? 3)  $OLD_PS1_OUT" $PS1_OUT
+    $TEST_RES += assertEqual "(my long project name 1337 !_$#? 3)  $OLD_PS1_OUT" $PS1_OUT
 
     unsource
 
     $PS1_OUT = prompt 6>&1
-    assertEqual $OLD_PS1_OUT $PS1_OUT
+    $TEST_RES += assertEqual $OLD_PS1_OUT $PS1_OUT
 
-    return $RES
+    return $TEST_RES
 }

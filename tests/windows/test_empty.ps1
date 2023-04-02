@@ -5,5 +5,5 @@ function global:empty () {
 
     unsource
 
-    return $RES
+    return 0
 }
