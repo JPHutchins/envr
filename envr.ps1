@@ -402,6 +402,10 @@ function global:unsource ([switch]$NonDestructive) {
         Remove-Item -Path function:unsource
     }
 
+    if (Get-Variable -Name "ENVR_ROOT" -ErrorAction SilentlyContinue) {
+        Remove-Variable -Name ENVR_ROOT -Scope Global -Force
+    } 
+
     # Remove variables leftover from script run
     # $_VAR_REMOVE_LIST = 
     #     "_PROJECT_NAME",
@@ -442,6 +446,8 @@ unsource -nondestructive
 
 # Save the old path
 Copy-Item -Path Env:PATH -Destination Env:_OLD_PATH
+
+New-Variable -Name ENVR_ROOT -Description "envr parent folder path" -Scope Global -Option ReadOnly -Visibility Public -Value $(pwd)
 
 # parse the environment file and setup
 $_CATEGORY = "INITIAL"
@@ -510,7 +516,7 @@ foreach ($line in Get-Content $_ENVR_CONFIG) {
         $_ALIAS_COMMAND_ARR += ,$_TEMP_ARRAY[0]
         if ($_TEMP_ARRAY.Length -ge 2) {
             $args = @()
-            for (($i = 1); $i -lt $_TEMP_ARRAY.Length; $i++) {
+            for (($i = 1); $i -lt $_TEMP_ARRAY.Length + 1; $i++) {
                 # Expand the args to use any environment variables 
                 $args += ,$ExecutionContext.InvokeCommand.ExpandString($_TEMP_ARRAY[$i])
             }
