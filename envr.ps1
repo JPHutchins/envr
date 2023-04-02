@@ -59,6 +59,9 @@ else
     return 1         
 fi
 
+ENVR_ROOT=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+export ENVR_ROOT=$ENVR_ROOT
+
 zsh_emulate_ksh () {
     if [[ -n "$ZSH_VERSION" ]] ; then
         emulate -L ksh
@@ -158,6 +161,7 @@ unsource () {
     unset _ENVR_OVERWRITTEN_ALIASES
     unset _ENVR_NEW_PATH
     unset VIRTUAL_ENV_DISABLE_PROMPT
+    unset ENVR_ROOT
 }
 
 _envr_init_private_variables () {
@@ -176,7 +180,7 @@ _envr_parse_config () {
     while IFS= read -r line <&3 || [[ -n "$line" ]] ; do
         config_file_line_number=$((config_file_line_number + 1))
         # trim whitespace and continue if line is blank
-        local line=$(echo "$line" | xargs)
+        local line=$(eval echo "$line" | xargs)
         if [[ "$line" = "" ]] ; then
             continue
         fi
@@ -213,7 +217,8 @@ _envr_parse_config () {
         elif [[ "$envr_config_category" = "[PROJECT_OPTIONS]" ]] ; then
             case "$KEY" in
                 "PROJECT_NAME")
-                    _ENVR_PROJECT_NAME="$VALUE";;
+                    _ENVR_PROJECT_NAME="$VALUE"
+                    export ENVR_PROJECT_NAME=$_ENVR_PROJECT_NAME;;
                 "PYTHON_VENV")
                     _ENVR_PYTHON_VENV="$VALUE";;
                 *)
