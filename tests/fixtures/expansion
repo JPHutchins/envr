@@ -1,0 +1,6 @@
+[VARIABLES]
+    FOO=bar
+    ANSWER=42                     
+    ABS_PATH_EXAMPLE=$ENVR_ROOT/path/to/resource
+    COMBINED=$FOO$ANSWER
+    COMBINED_PATH=$ABS_PATH_EXAMPLE/$COMBINED

@@ -19,11 +19,11 @@ elif [[ -n "${ZSH_VERSION:-}" ]] ; then
     assertEqual "$(echo $PS1 | cut -c 8-)" "(my long project name 1337 !_*#? 3) "
 fi
 
+assertEqual "my long project name 1337 !_*#? 3" "$ENVR_PROJECT_NAME"
+
 unsource
 
 assertEqual "$OLD_PATH" "$PATH"
 assertEqual "$OLD_ALS" "$(alias)"
-
-
 
 exit $RES

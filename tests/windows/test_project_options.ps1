@@ -9,6 +9,7 @@ function global:project_options () {
 
     $PS1_OUT = prompt 6>&1
     $TEST_RES += assertEqual "(my long project name 1337 !_*#? 3)  $OLD_PS1_OUT" $PS1_OUT
+    $TEST_RES += assertEqual "my long project name 1337 !_*#? 3" $env:ENVR_PROJECT_NAME
 
     unsource
 

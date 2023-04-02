@@ -15,6 +15,7 @@ runtest zsh envars
 runtest zsh project_options
 runtest zsh aliases
 runtest zsh path
+runtest zsh expansion
 
 # create a python venv
 python3 -m venv venv

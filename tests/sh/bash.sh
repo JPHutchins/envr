@@ -13,6 +13,7 @@ runtest bash envars
 runtest bash project_options
 runtest bash aliases
 runtest bash path
+runtest bash expansion
 
 # create a python venv
 python3 -m venv venv

@@ -12,6 +12,8 @@ OLD_PS1="${PS1:-}"
 assertEqual "$OLD_PATH" "$PATH"
 assertEqual "$OLD_ALS" "$(alias)"
 
+assertEqual $(pwd) $(echo $ENVR_ROOT)
+
 # cut off the leading characters
 if [[ -n "${BASH:-}" ]] ; then
     assertEqual "$(echo $PS1 | cut -c 11-)" "(envr)"
@@ -23,5 +25,6 @@ unsource
 
 assertEqual "$OLD_PATH" "$PATH"
 assertEqual "$OLD_ALS" "$(alias)"
+assertNotContains "$(printenv)" "ENVR_ROOT"
 
 exit $RES
