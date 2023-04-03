@@ -15,12 +15,12 @@ jobs:
       # - name: Install zsh
       #   run: sudo apt update && sudo apt install zsh -y
 
-      - name: Test bash on Ubuntu
-        run: tests/sh/bash.sh
-      
       - id: get-bash-version
         run: echo "VERSION=${BASH_VERSION}" >> $GITHUB_OUTPUT
 
+      - name: Test bash on Ubuntu
+        run: tests/sh/bash.sh
+      
       - name: Success badge
         if: ${{ success() }}
         uses: RubbaBoy/BYOB@v1.3.0
