@@ -7,6 +7,29 @@ on:
     branches: [ main, develop ]
 
 jobs:
+  test_linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      # - name: Install zsh
+      #   run: sudo apt update && sudo apt install zsh -y
+      
+      - name: Test bash on Ubuntu
+      - id: version
+        run: |
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "TEST_RESULT<<$EOF" >> $GITHUB_ENV
+          tests/sh/bash.sh >> $GITHUB_ENV
+          echo "$EOF" >> $GITHUB_ENV
+        uses: RubbaBoy/BYOB@v1.3.0
+        with:
+          NAME: ubuntu_bash
+          LABEL: Ubuntu bash
+          STATUS: ${{ env.TEST_RESULT }}
+          COLOR: 00EEFF
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   test:
     strategy:
       matrix:
