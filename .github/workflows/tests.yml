@@ -14,18 +14,31 @@ jobs:
 
       # - name: Install zsh
       #   run: sudo apt update && sudo apt install zsh -y
-      
+
       - name: Test bash on Ubuntu
-        id: test-bash
+        run: tests/sh/bash.sh
+      
+      - id: get-bash-version
         run: echo "VERSION=${BASH_VERSION}" >> $GITHUB_OUTPUT
 
-      - name: Test bash on Ubuntu badge
+      - name: Success badge
+        if: ${{ success() }}
         uses: RubbaBoy/BYOB@v1.3.0
         with:
           NAME: ubuntu_bash
-          LABEL: Ubuntu bash
-          STATUS: ${{ steps.test-bash.outputs.VERSION }}
-          COLOR: 00EEFF
+          LABEL: bash
+          STATUS: ${{ steps.get-bash-version.outputs.VERSION }}
+          COLOR: 75eb76
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Fail badge
+        if: ${{ failure() }}
+        uses: RubbaBoy/BYOB@v1.3.0
+        with:
+          NAME: ubuntu_bash
+          LABEL: bash
+          STATUS: ${{ steps.get-bash-version.outputs.VERSION }}
+          COLOR: c31f1d
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   test:

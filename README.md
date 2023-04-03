@@ -1,12 +1,12 @@
 # envr
 
+![](https://byob.yarr.is/JPHutchins/envr/ubuntu_bash)
+
 ## Simple Development Environment Manager
 
 envr is a self-contained *cross-platform script* (envr.ps1) that allows developers to specify environment variables, aliases, and additions to the system path.
 
 The goal of envr is to unify the development environment setup of any repository by providing a consistent interface for Windows, MacOS, or GNU/Linux.
-
-![](https://byob.yarr.is/JPHutchins/envr/ubuntu_bash)
 
 # Usage
 
