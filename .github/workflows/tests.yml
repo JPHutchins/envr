@@ -22,6 +22,8 @@ jobs:
           echo "TEST_RESULT<<$EOF" >> $GITHUB_ENV
           tests/sh/bash.sh >> $GITHUB_ENV
           echo "$EOF" >> $GITHUB_ENV
+          
+      - name: Test bash on Ubuntu badge
         uses: RubbaBoy/BYOB@v1.3.0
         with:
           NAME: ubuntu_bash
