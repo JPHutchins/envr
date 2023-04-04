@@ -130,6 +130,8 @@ jobs:
     steps:
       - run: echo ${{ needs.test_ps_on_windows.outputs.version }}
       - run: echo ${{ needs.test_ps_on_windows.outputs }}
+      - run: echo ${{ needs.test_ps_on_windows.outputs.color }}
+      - run: echo ${{ needs.test_ps_on_windows.outputs.not_real }}
 
       - name: Make Windows PS Badge
         uses: RubbaBoy/BYOB@v1.3.0
