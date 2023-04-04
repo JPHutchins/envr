@@ -128,30 +128,33 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test_ps_on_windows, test_bash_on_mac, test_zsh_on_mac]
     steps:
+      - run: echo ${{ needs.test_ps_on_windows.outputs.version }}
+      - run: echo ${{ needs.test_ps_on_windows.outputs }}
+
       - name: Make Windows PS Badge
         uses: RubbaBoy/BYOB@v1.3.0
         with:
           NAME: windows_ps
           LABEL: PowerShell
-          STATUS: ${{needs.test_ps_on_windows.outputs.version }}
+          STATUS: ${{ needs.test_ps_on_windows.outputs.version }}
           COLOR: ${{ needs.test_ps_on_windows.outputs.color }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Make MacOS bash badge
+      - name: Make MacOS bash Badge
         uses: RubbaBoy/BYOB@v1.3.0
         with:
           NAME: mac_bash
           LABEL: bash
-          STATUS: ${{needs.test_bash_on_mac.outputs.version }}
+          STATUS: ${{ needs.test_bash_on_mac.outputs.version }}
           COLOR: ${{ needs.test_bash_on_mac.outputs.color }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Make MacOS zsh badge
+      - name: Make MacOS zsh Badge
         uses: RubbaBoy/BYOB@v1.3.0
         with:
           NAME: mac_zsh
           LABEL: zsh
-          STATUS: ${{needs.test_zsh_on_mac.outputs.version }}
+          STATUS: ${{ needs.test_zsh_on_mac.outputs.version }}
           COLOR: ${{ needs.test_zsh_on_mac.outputs.color }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
