@@ -7,14 +7,14 @@ on:
     branches: [ develop ]
 
 env:
-  SUCCESS_COLOR: 75eb76
-  FAIL_COLOR: c31f1d
+  COLOR_SUCCESS: 75eb76
+  COLOR_FAIL: c31f1d
 
 jobs:
   test_bash_on_ubuntu:
     runs-on: ubuntu-latest
     env:
-      color: c31f1d
+      color: ${{ env.COLOR_FAIL }}
     steps:
       - uses: actions/checkout@v3
 
@@ -26,7 +26,7 @@ jobs:
 
       - name: Set success color
         if: success()
-        run: echo "color=75eb76" >> $GITHUB_ENV
+        run: echo "color=${{ env.COLOR_SUCCESS }}" >> $GITHUB_ENV
       
       - name: Make badge
         if: success() || failure()
@@ -41,7 +41,7 @@ jobs:
   test_zsh_on_ubuntu:
     runs-on: ubuntu-latest
     env:
-      color: c31f1d
+      color: ${{ env.COLOR_FAIL }}
     steps:
       - uses: actions/checkout@v3
 
@@ -56,14 +56,14 @@ jobs:
       
       - name: Set success color
         if: success()
-        run: echo "color=75eb76" >> $GITHUB_ENV
+        run: echo "color=${{ env.COLOR_SUCCESS }}" >> $GITHUB_ENV
       
       - name: Make badge
         if: success() || failure()
         uses: RubbaBoy/BYOB@v1.3.0
         with:
           NAME: ubuntu_zsh
-          LABEL: bash
+          LABEL: zsh
           STATUS: ${{ env.version }}
           COLOR: ${{ env.color }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

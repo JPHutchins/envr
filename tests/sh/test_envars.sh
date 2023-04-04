@@ -18,7 +18,7 @@ assertEqual "$OLD_ALS" "$(alias)"
 
 NEW_ENV="$(printenv)"
 assertContains "$NEW_ENV" "FOO=bar"                     
-assertContains "$NEW_ENV" "ANSWER=43"                    
+assertContains "$NEW_ENV" "ANSWER=42"                    
 assertContains "$NEW_ENV" "SPACES=oh we got some spaces"
 assertContains "$NEW_ENV" "USER_VAR=user value overwritten"
 
