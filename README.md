@@ -1,22 +1,18 @@
 # envr
 
+![](https://byob.yarr.is/JPHutchins/envr/ubuntu_bash)
+![](https://byob.yarr.is/JPHutchins/envr/ubuntu_zsh)
+![](https://byob.yarr.is/JPHutchins/envr/windows_ps)
+![](https://byob.yarr.is/JPHutchins/envr/mac_zsh)
+![](https://byob.yarr.is/JPHutchins/envr/mac_bash)
+
 ## Simple Development Environment Manager
 
 envr is a *self-contained cross-platform script* (envr.ps1) that allows developers to specify environment variables, aliases, and additions to the system path.
 
 ## Compatibility
 
-envr can be used with bash, zsh, and PowerShell in Linux, Windows, and MacOS.
-
-### Shell versions covered by continuous integration
-
-Linux: ![](https://byob.yarr.is/JPHutchins/envr/ubuntu_bash)  ![](https://byob.yarr.is/JPHutchins/envr/ubuntu_zsh)
-
-Windows: ![](https://byob.yarr.is/JPHutchins/envr/windows_ps)
-
-MacOS: ![](https://byob.yarr.is/JPHutchins/envr/mac_zsh)  ![](https://byob.yarr.is/JPHutchins/envr/mac_bash)
-
-See the [github workflows](.github/workflows).
+envr can be used with bash, zsh, and PowerShell in Linux, Windows, and MacOS.  See the [github workflows](.github/workflows).
 
 # Usage
 
