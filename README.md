@@ -1,10 +1,18 @@
 # envr
 
+![](https://byob.yarr.is/JPHutchins/envr/ubuntu_bash)
+![](https://byob.yarr.is/JPHutchins/envr/ubuntu_zsh)
+![](https://byob.yarr.is/JPHutchins/envr/windows_ps)
+![](https://byob.yarr.is/JPHutchins/envr/mac_zsh)
+![](https://byob.yarr.is/JPHutchins/envr/mac_bash)
+
 ## Simple Development Environment Manager
 
-envr is a self-contained *cross-platform script* (envr.ps1) that allows developers to specify environment variables, aliases, and additions to the system path.
+envr is a *self-contained cross-platform script* (envr.ps1) that allows developers to specify environment variables, aliases, and additions to the system path.
 
-The goal of envr is to unify the development environment setup of any repository by providing a consistent interface for Windows, MacOS, or GNU/Linux.
+## Compatibility
+
+envr can be used with bash, zsh, and PowerShell in Linux, Windows, and MacOS.  See the [github workflows](.github/workflows).
 
 # Usage
 
@@ -19,7 +27,7 @@ The goal of envr is to unify the development environment setup of any repository
 
 `envr-default` (and `envr-local`) is just a text file of the following shape.  Currently four categories are supported, marked by `[ ]`.  Environment definitions are in the format `KEY=VALUE`.
 
-```
+```ini
 # An example using all current categories
 
 [PROJECT_OPTIONS]
@@ -56,19 +64,11 @@ The goal of envr is to unify the development environment setup of any repository
 
 #$&*%^
 
-Because PowerShell scripts don't run with any other extension.  If you don't want to support Windows development then alias or rename `envr.ps1` to `envr`.
+Because PowerShell scripts don't run with any other extension.
 
-# Support Status
+# Motivation
 
-| Feature                                     | Windows PowerShell   | GNU bash 5.0.17(1)-release | zsh 5.8 (x86_64-ubuntu-linux-gnu) | GNU bash 3.2.57(1)-release | zsh 5.3 (x86_64-apple-darwin18.0) |
-| ------------------------------------------- | -------------------- | -------------------------- | --------------------------------- | -------------------------- | --------------------------------- |
-| set/overwrite/restore environment variables | ✅                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
-| prompt shows active project name            | ✅                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
-| activate/deactivate python venv             | ✅  (needs unit test) | ✅                          | ✅                                 | ✅                          | ✅                                 |
-| set aliases                                 | ✅                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
-| overwrite/restore aliases                   | ✅                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
-| add-to/restore PATH                         | ✅                    | ✅                          | ✅                                 | ✅                          | ✅                                 |
-
+The goal of envr is to unify the development environment setup of any repository by providing a consistent interface for Windows, MacOS, and GNU/Linux shells.
 
 # envr testing and development
 

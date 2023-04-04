@@ -4,29 +4,157 @@ on:
   push:
     branches: [ main, develop ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ develop ]
+
+env:
+  COLOR_SUCCESS: 1e6e18
+  COLOR_FAIL: c31f1d
 
 jobs:
-  test:
-    strategy:
-      matrix:
-        os: [windows-latest, windows-2019, ubuntu-latest, ubuntu-20.04, macos-latest, macos-11]
-    runs-on: ${{ matrix.os }}
+  test_bash_on_ubuntu:
+    runs-on: ubuntu-latest
+    env:
+      color: c31f1d
     steps:
       - uses: actions/checkout@v3
 
-      - name: Test PowerShell on ${{ matrix.os }}
-        if: ${{ contains(matrix.os, 'windows') }}
-        run: .\tests\windows\ps.ps1
+      - name: Get version
+        run: echo "version=${BASH_VERSION}" >> $GITHUB_ENV
 
-      - name: Test bash on ${{ matrix.os }}
-        if: ${{ !contains(matrix.os, 'windows') }}
+      - name: Test bash on Ubuntu
         run: tests/sh/bash.sh
 
-      - name: Install zsh on ${{ matrix.os }}
-        if: ${{ contains(matrix.os, 'ubuntu') }}
-        run: sudo apt update && sudo apt install zsh -y
+      - name: Set success color
+        if: success()
+        run: echo "color=${{ env.COLOR_SUCCESS }}" >> $GITHUB_ENV
+      
+      - name: Make badge
+        if: success() || failure()
+        uses: RubbaBoy/BYOB@v1.3.0
+        with:
+          NAME: ubuntu_bash
+          LABEL: bash
+          STATUS: ${{ env.version }}
+          COLOR: ${{ env.color }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  test_zsh_on_ubuntu:
+    runs-on: ubuntu-latest
+    env:
+      color: c31f1d
+    steps:
+      - uses: actions/checkout@v3
 
-      - name: Test zsh on ${{ matrix.os }}
-        if: ${{ !contains(matrix.os, 'windows') }}
+      - name: Install zsh
+        run: sudo apt update && sudo apt install zsh -y
+      
+      - name: Get version
+        run: echo "version=$(zsh --version)" >> $GITHUB_ENV
+      
+      - name: Test zsh on Ubuntu
         run: tests/sh/zsh.sh
+      
+      - name: Set success color
+        if: success()
+        run: echo "color=${{ env.COLOR_SUCCESS }}" >> $GITHUB_ENV
+      
+      - name: Make badge
+        if: success() || failure()
+        uses: RubbaBoy/BYOB@v1.3.0
+        with:
+          NAME: ubuntu_zsh
+          LABEL: zsh
+          STATUS: ${{ env.version }}
+          COLOR: ${{ env.color }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+  test_ps_on_windows:
+    runs-on: windows-latest
+    outputs:
+      color: ${{ steps.set-success-color.outputs.color }}
+      version: ${{ steps.get-version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v3
+      
+      - id: get-version
+        run: $($_v = $PSVersionTable.PSVersion; echo version=$_v) >> $env:GITHUB_OUTPUT
+      
+      - name: Test ps on Windows
+        run: ./tests/windows/ps.ps1
+      
+      - id: set-success-color
+        if: success()
+        run: echo "color=${{ env.COLOR_SUCCESS }}" >> $env:GITHUB_OUTPUT
+  
+  test_bash_on_mac:
+    runs-on: macos-latest
+    outputs:
+      color: ${{ steps.set-success-color.outputs.color }}
+      version: ${{ steps.get-version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v3
+      
+      - id: get-version
+        run: echo "version=${BASH_VERSION}" >> $GITHUB_OUTPUT
+      
+      - name: Test bash on MacOS
+        run: tests/sh/bash.sh
+      
+      - id: set-success-color
+        if: success()
+        run: echo "color=${{ env.COLOR_SUCCESS }}" >> $GITHUB_OUTPUT
+      
+  
+  test_zsh_on_mac:
+    runs-on: macos-latest
+    outputs:
+      color: ${{ steps.set-success-color.outputs.color }}
+      version: ${{ steps.get-version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v3
+      
+      - id: get-version
+        run: echo "version=$(zsh --version)" >> $GITHUB_OUTPUT
+      
+      - name: Test zsh on MacOS
+        run: tests/sh/zsh.sh
+      
+      - id: set-success-color
+        if: success()
+        run: echo "color=${{ env.COLOR_SUCCESS }}" >> $GITHUB_OUTPUT
+      
+  
+  make_badges:
+    if: always()
+    runs-on: ubuntu-latest
+    needs: [test_ps_on_windows, test_bash_on_mac, test_zsh_on_mac]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Make Windows PS Badge
+        uses: RubbaBoy/BYOB@v1.3.0
+        with:
+          NAME: windows_ps
+          LABEL: PowerShell
+          STATUS: ${{ needs.test_ps_on_windows.outputs.version }}
+          COLOR: ${{ needs.test_ps_on_windows.outputs.color }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Make MacOS bash Badge
+        uses: RubbaBoy/BYOB@v1.3.0
+        with:
+          NAME: mac_bash
+          LABEL: bash
+          STATUS: ${{ needs.test_bash_on_mac.outputs.version }}
+          COLOR: ${{ needs.test_bash_on_mac.outputs.color }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Make MacOS zsh Badge
+        uses: RubbaBoy/BYOB@v1.3.0
+        with:
+          NAME: mac_zsh
+          LABEL: zsh
+          STATUS: ${{ needs.test_zsh_on_mac.outputs.version }}
+          COLOR: ${{ needs.test_zsh_on_mac.outputs.color }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
