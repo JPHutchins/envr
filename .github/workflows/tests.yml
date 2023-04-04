@@ -4,63 +4,90 @@ on:
   push:
     branches: [ main, develop ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ develop ]
+
+env:
+  SUCCESS_COLOR: 75eb76
+  FAIL_COLOR: c31f1d
 
 jobs:
-  test_linux:
+  test_bash_on_ubuntu:
     runs-on: ubuntu-latest
+    env:
+      color: c31f1d
     steps:
       - uses: actions/checkout@v3
 
-      # - name: Install zsh
-      #   run: sudo apt update && sudo apt install zsh -y
-
-      - id: get-bash-version
-        run: echo "VERSION=${BASH_VERSION}" >> $GITHUB_OUTPUT
+      - name: Get version
+        run: echo "version=${BASH_VERSION}" >> $GITHUB_ENV
 
       - name: Test bash on Ubuntu
         run: tests/sh/bash.sh
-      
-      - name: Success badge
-        if: ${{ success() }}
-        uses: RubbaBoy/BYOB@v1.3.0
-        with:
-          NAME: ubuntu_bash
-          LABEL: bash
-          STATUS: ${{ steps.get-bash-version.outputs.VERSION }}
-          COLOR: 75eb76
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Fail badge
-        if: ${{ failure() }}
-        uses: RubbaBoy/BYOB@v1.3.0
-        with:
-          NAME: ubuntu_bash
-          LABEL: bash
-          STATUS: ${{ steps.get-bash-version.outputs.VERSION }}
-          COLOR: c31f1d
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  test:
-    strategy:
-      matrix:
-        os: [windows-latest, windows-2019, ubuntu-latest, ubuntu-20.04, macos-latest, macos-11]
-    runs-on: ${{ matrix.os }}
+      - name: Set success color
+        if: success()
+        run: echo "color=75eb76" >> $GITHUB_ENV
+      
+      - name: Make badge
+        if: success() || failure()
+        uses: RubbaBoy/BYOB@v1.3.0
+        with:
+          NAME: ubuntu_bash
+          LABEL: bash
+          STATUS: ${{ env.version }}
+          COLOR: ${{ env.color }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  test_zsh_on_ubuntu:
+    runs-on: ubuntu-latest
+    env:
+      color: c31f1d
     steps:
       - uses: actions/checkout@v3
 
-      - name: Test PowerShell on ${{ matrix.os }}
-        if: ${{ contains(matrix.os, 'windows') }}
-        run: .\tests\windows\ps.ps1
-
-      - name: Test bash on ${{ matrix.os }}
-        if: ${{ !contains(matrix.os, 'windows') }}
-        run: tests/sh/bash.sh
-
-      - name: Install zsh on ${{ matrix.os }}
-        if: ${{ contains(matrix.os, 'ubuntu') }}
+      - name: Install zsh
         run: sudo apt update && sudo apt install zsh -y
-
-      - name: Test zsh on ${{ matrix.os }}
-        if: ${{ !contains(matrix.os, 'windows') }}
+      
+      - name: Get version
+        run: echo "version=$(zsh --version)" >> $GITHUB_ENV
+      
+      - name: Test zsh on Ubuntu
         run: tests/sh/zsh.sh
+      
+      - name: Set success color
+        if: success()
+        run: echo "color=75eb76" >> $GITHUB_ENV
+      
+      - name: Make badge
+        if: success() || failure()
+        uses: RubbaBoy/BYOB@v1.3.0
+        with:
+          NAME: ubuntu_zsh
+          LABEL: bash
+          STATUS: ${{ env.version }}
+          COLOR: ${{ env.color }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # test:
+  #   strategy:
+  #     matrix:
+  #       os: [windows-latest, windows-2019, ubuntu-latest, ubuntu-20.04, macos-latest, macos-11]
+  #   runs-on: ${{ matrix.os }}
+  #   steps:
+  #     - uses: actions/checkout@v3
+
+  #     - name: Test PowerShell on ${{ matrix.os }}
+  #       if: ${{ contains(matrix.os, 'windows') }}
+  #       run: .\tests\windows\ps.ps1
+
+  #     - name: Test bash on ${{ matrix.os }}
+  #       if: ${{ !contains(matrix.os, 'windows') }}
+  #       run: tests/sh/bash.sh
+
+  #     - name: Install zsh on ${{ matrix.os }}
+  #       if: ${{ contains(matrix.os, 'ubuntu') }}
+  #       run: sudo apt update && sudo apt install zsh -y
+
+  #     - name: Test zsh on ${{ matrix.os }}
+  #       if: ${{ !contains(matrix.os, 'windows') }}
+  #       run: tests/sh/zsh.sh

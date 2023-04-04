@@ -1,6 +1,7 @@
 # envr
 
 ![](https://byob.yarr.is/JPHutchins/envr/ubuntu_bash)
+![](https://byob.yarr.is/JPHutchins/envr/ubuntu_zsh)
 
 ## Simple Development Environment Manager
 
