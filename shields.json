@@ -1,1 +1,1 @@
-{"ubuntu_bash":{"label":"bash","status":"5.1.16(1)-release","color":"1e6e18"},"ubuntu_zsh":{"label":"zsh","status":"zsh 5.8.1 (x86_64-ubuntu-linux-gnu)","color":"1e6e18"},"windows_ps":{"label":"PowerShell","status":"","color":""}}
+{"ubuntu_bash":{"label":"bash","status":"5.1.16(1)-release","color":"1e6e18"},"ubuntu_zsh":{"label":"zsh","status":"zsh 5.8.1 (x86_64-ubuntu-linux-gnu)","color":"1e6e18"},"windows_ps":{"label":"PowerShell","status":"","color":""},"mac_bash":{"label":"bash","status":"","color":""}}
