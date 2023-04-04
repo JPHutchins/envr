@@ -77,14 +77,14 @@ jobs:
       - uses: actions/checkout@v3
       
       - id: get-version
-        run: $_v = $PSVersionTable.PSVersion; echo version=$_v >> $GITHUB_OUTPUT
+        run: $($_v = $PSVersionTable.PSVersion; echo version=$_v) >> $GITHUB_OUTPUT
       
       - name: Test ps on Windows
         run: ./tests/windows/ps.ps1
       
       - id: set-success-color
         if: success()
-        run: echo "color=${{ env.COLOR_SUCCESS }}" >> $GITHUB_OUTPUT
+        run: echo "color=1e6e18" >> $GITHUB_OUTPUT
   
   test_bash_on_mac:
     runs-on: macos-latest
@@ -134,16 +134,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-
-      - env:
-          VERSION_PS: ${{ needs.test_ps_on_windows.outputs.version }}
-          COLOR_PS: ${{ needs.test_ps_on_windows.outputs.color }}
-        run: echo "$VERSION_PS $COLOR_PS"
-
-      - run: echo ${{ needs.test_ps_on_windows.outputs.version }}
-      - run: echo ${{ needs.test_ps_on_windows.outputs }}
-      - run: echo ${{ needs.test_ps_on_windows.outputs.color }}
-      - run: echo "$E_VERSION_PS $E_COLOR_PS $VERSION_PS $COLOR_PS"
 
       - name: Make Windows PS Badge
         uses: RubbaBoy/BYOB@v1.3.0
