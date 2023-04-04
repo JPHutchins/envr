@@ -94,6 +94,60 @@ jobs:
           STATUS: ${{ env.version }}
           COLOR: ${{ env.color }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  test_bash_on_mac:
+    runs-on: macos-latest
+    env:
+      color: c31f1d
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Get version
+        run: echo "version=$(echo $(bash $(echo $BASH_VERSION)))" >> $GITHUB_ENV
+      
+      - name: Test bash on MacOS
+        run: tests/sh/bash.sh
+      
+      - name: Set success color
+        if: success()
+        run: echo "color=${{ env.COLOR_SUCCESS }}" >> $GITHUB_ENV
+      
+      - name: Make badge
+        if: success() || failure()
+        uses: RubbaBoy/BYOB@v1.3.0
+        with:
+          NAME: mac_bash
+          LABEL: bash
+          STATUS: ${{ env.version }}
+          COLOR: ${{ env.color }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  test_zsh_on_mac:
+    runs-on: macos-latest
+    env:
+      color: c31f1d
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Get version
+        run: echo "version=$(zsh --version)" >> $GITHUB_ENV
+      
+      - name: Test bash on MacOS
+        run: tests/sh/zsh.sh
+      
+      - name: Set success color
+        if: success()
+        run: echo "color=${{ env.COLOR_SUCCESS }}" >> $GITHUB_ENV
+      
+      - name: Make badge
+        if: success() || failure()
+        uses: RubbaBoy/BYOB@v1.3.0
+        with:
+          NAME: mac_zsh
+          LABEL: zsh
+          STATUS: ${{ env.version }}
+          COLOR: ${{ env.color }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # test:
   #   strategy:
