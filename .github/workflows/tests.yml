@@ -67,6 +67,33 @@ jobs:
           STATUS: ${{ env.version }}
           COLOR: ${{ env.color }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+  test_ps_on_windows:
+    runs-on: windows-latest
+    env:
+      color: c31f1d
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Get version
+        run: echo "version=$PSVersionTable.PSVersion" >> $GITHUB_ENV
+      
+      - name: Test ps on Windows
+        run: ./tests/windows/ps.ps1
+      
+      - name: Set success color
+        if: success()
+        run: echo "color=${{ env.COLOR_SUCCESS }}" >> $GITHUB_ENV
+      
+      - name: Make badge
+        if: success() || failure()
+        uses: RubbaBoy/BYOB@v1.3.0
+        with:
+          NAME: windows_ps
+          LABEL: PowerShell
+          STATUS: ${{ env.version }}
+          COLOR: ${{ env.color }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # test:
   #   strategy:
