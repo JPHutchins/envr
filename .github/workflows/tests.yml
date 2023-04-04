@@ -77,14 +77,14 @@ jobs:
       - uses: actions/checkout@v3
       
       - id: get-version
-        run: $($_v = $PSVersionTable.PSVersion; echo version=$_v) >> $GITHUB_OUTPUT
+        run: $($_v = $PSVersionTable.PSVersion; echo version=$_v) >> $env:GITHUB_OUTPUT
       
       - name: Test ps on Windows
         run: ./tests/windows/ps.ps1
       
       - id: set-success-color
         if: success()
-        run: echo "color=1e6e18" >> $GITHUB_OUTPUT
+        run: echo "color=1e6e18" >> $env:GITHUB_OUTPUT
   
   test_bash_on_mac:
     runs-on: macos-latest
