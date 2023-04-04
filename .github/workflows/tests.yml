@@ -7,7 +7,7 @@ on:
     branches: [ develop ]
 
 env:
-  COLOR_SUCCESS: 75eb76
+  COLOR_SUCCESS: 1e6e18
   COLOR_FAIL: c31f1d
 
 jobs:
