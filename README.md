@@ -27,7 +27,7 @@ envr can be used with bash, zsh, and PowerShell in Linux, Windows, and MacOS.  S
 
 `envr-default` (and `envr-local`) is just a text file of the following shape.  Currently four categories are supported, marked by `[ ]`.  Environment definitions are in the format `KEY=VALUE`.
 
-```
+```ini
 # An example using all current categories
 
 [PROJECT_OPTIONS]
