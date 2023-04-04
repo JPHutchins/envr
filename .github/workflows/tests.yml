@@ -72,7 +72,7 @@ jobs:
     runs-on: windows-latest
     outputs:
       color: ${{ steps.set-success-color.outputs.color }}
-      version: ${{ steps.get-id.outputs.version }}
+      version: ${{ steps.get-version.outputs.version }}
     steps:
       - uses: actions/checkout@v3
       
@@ -90,17 +90,17 @@ jobs:
     runs-on: macos-latest
     outputs:
       color: ${{ steps.set-success-color.outputs.color }}
-      version: ${{ steps.get-id.outputs.version }}
+      version: ${{ steps.get-version.outputs.version }}
     steps:
       - uses: actions/checkout@v3
       
-      - name: Get version
+      - id: get-version
         run: echo "version=${BASH_VERSION}" >> $GITHUB_OUTPUT
       
       - name: Test bash on MacOS
         run: tests/sh/bash.sh
       
-      - name: Set success color
+      - id: set-success-color
         if: success()
         run: echo "color=${{ env.COLOR_SUCCESS }}" >> $GITHUB_OUTPUT
       
@@ -109,17 +109,17 @@ jobs:
     runs-on: macos-latest
     outputs:
       color: ${{ steps.set-success-color.outputs.color }}
-      version: ${{ steps.get-id.outputs.version }}
+      version: ${{ steps.get-version.outputs.version }}
     steps:
       - uses: actions/checkout@v3
       
-      - name: Get version
+      - id: get-version
         run: echo "version=$(zsh --version)" >> $GITHUB_OUTPUT
       
       - name: Test zsh on MacOS
         run: tests/sh/zsh.sh
       
-      - name: Set success color
+      - id: set-success-color
         if: success()
         run: echo "color=${{ env.COLOR_SUCCESS }}" >> $GITHUB_OUTPUT
       
@@ -133,6 +133,8 @@ jobs:
       E_COLOR_PS: ${{ needs.test_ps_on_windows.outputs.color }}
 
     steps:
+      - uses: actions/checkout@v3
+
       - env:
           VERSION_PS: ${{ needs.test_ps_on_windows.outputs.version }}
           COLOR_PS: ${{ needs.test_ps_on_windows.outputs.color }}
