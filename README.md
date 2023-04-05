@@ -2,6 +2,7 @@
 
 ![](https://byob.yarr.is/JPHutchins/envr/ubuntu_bash)
 ![](https://byob.yarr.is/JPHutchins/envr/ubuntu_zsh)
+![](https://byob.yarr.is/JPHutchins/envr/windows_ps_core)
 ![](https://byob.yarr.is/JPHutchins/envr/windows_ps)
 ![](https://byob.yarr.is/JPHutchins/envr/mac_zsh)
 ![](https://byob.yarr.is/JPHutchins/envr/mac_bash)
