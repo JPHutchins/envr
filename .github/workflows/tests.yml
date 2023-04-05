@@ -70,7 +70,6 @@ jobs:
     
   test_ps_core_on_windows:
     runs-on: windows-latest
-    shell: pwsh
     outputs:
       color: ${{ steps.set-success-color.outputs.color }}
       version: ${{ steps.get-version.outputs.version }}
@@ -78,9 +77,11 @@ jobs:
       - uses: actions/checkout@v3
       
       - id: get-version
+        shell: pwsh
         run: $($_v = $PSVersionTable.PSVersion; echo version=$_v) >> $env:GITHUB_OUTPUT
       
       - name: Test PS Core on Windows
+        shell: pwsh
         run: ./tests/windows/ps.ps1
       
       - id: set-success-color
@@ -89,7 +90,6 @@ jobs:
 
   test_ps_on_windows:
     runs-on: windows-latest
-    shell: powershell
     outputs:
       color: ${{ steps.set-success-color.outputs.color }}
       version: ${{ steps.get-version.outputs.version }}
@@ -97,9 +97,11 @@ jobs:
       - uses: actions/checkout@v3
       
       - id: get-version
+        shell: powershell
         run: $($_v = $PSVersionTable.PSVersion; echo version=$_v) >> $env:GITHUB_OUTPUT
       
       - name: Test PS on Windows
+        shell: powershell
         run: ./tests/windows/ps.ps1
       
       - id: set-success-color
