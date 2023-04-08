@@ -17,6 +17,9 @@ runtest zsh aliases
 runtest zsh path
 runtest zsh expansion
 
+runtest zsh multi
+rm envr-default 2> /dev/null
+
 # create a python venv
 python3 -m venv venv
 runtest zsh python_venv

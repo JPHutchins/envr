@@ -1,0 +1,15 @@
+# example envr-default to be overwritten by envr-local
+
+[PROJECT_OPTIONS]
+    PROJECT_NAME=1a
+[ALIASES]
+    hello=echo Hello world!
+    user_alias=echo 1c
+[VARIABLES]
+    FOO=1d
+    ANSWER=42
+    SPACES=oh we got some spaces
+    USER_VAR=1e
+[ADD_TO_PATH]
+    HOME_HAHA=/usr
+    USR_LOCAL_BIN=/usr/local/bin

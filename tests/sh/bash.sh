@@ -15,6 +15,9 @@ runtest bash aliases
 runtest bash path
 runtest bash expansion
 
+runtest bash multi
+rm envr-default 2> /dev/null
+
 # create a python venv
 python3 -m venv venv
 runtest bash python_venv

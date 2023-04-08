@@ -53,6 +53,8 @@ zsh_emulate_sh () {
 }
 
 runtest () {
+    cp tests/fixtures/empty envr-default    
+
     echo -n -e "\tTesting $2 "
     env -i $1 tests/sh/test_$2.sh $2
     if [[ $? != 0 ]] ; then
@@ -62,6 +64,8 @@ runtest () {
         pass "$2 passed! 🥳"
         return 0
     fi
+
+    rm envr-default 2> /dev/null
 }
 
 trap '(( RES |= $? ))' ERR

@@ -71,18 +71,15 @@ _envr_check_for_config () {
     _ENVR_HAS_DEFAULT_CONFIG=0
     if [[ -f "envr-default" ]] ; then
         _ENVR_HAS_DEFAULT_CONFIG=1
+    else 
+        echo -e "\033[0;31mERROR: an envr-default configuration file must exist.\033[0m"
+        unset _ENVR_HAS_DEFAULT_CONFIG
+        return 1
     fi
 
     _ENVR_HAS_LOCAL_CONFIG=0
     if [[ -f "envr-local" ]] ; then
         _ENVR_HAS_LOCAL_CONFIG=1
-    fi
-
-    if [[ $(( (_ENVR_HAS_DEFAULT_CONFIG | _ENVR_HAS_LOCAL_CONFIG) )) = 0 ]] ; then
-        echo -e "\033[0;31mERROR: an envr-local or envr-default configuration file must exist.\033[0m"
-        unset _ENVR_HAS_DEFAULT_CONFIG
-        unset _ENVR_HAS_LOCAL_CONFIG
-        return 1
     fi
 }
 
@@ -184,20 +181,23 @@ _envr_init_private_variables () {
 
 _envr_get_index () {
     local key=$1
-    local list=$2
+    shift
+    local list=("$@")
 
     local list_length="${#list[@]}"
     if [[ $list_length -gt 255 ]] ; then
         exit 2  # can only return 0 - 255; not supporing more than 256 entries
     fi
 
+    local index=$KEY_NOT_FOUND_ERROR
     for (( i = 0; i <= $list_length; i++ )) ; do
         local KEY=$(echo ${list[i]/%=*/})
         if [[ "$key" = "$KEY" ]] ; then
-            return $i
+            index=$i
+            break
         fi
     done
-    echo $KEY_NOT_FOUND_ERROR
+    echo $index
 }
 
 _envr_parse_config () {
@@ -232,7 +232,7 @@ _envr_parse_config () {
 
         # update the list of project options
         elif [[ "$envr_config_category" = "[PROJECT_OPTIONS]" ]] ; then
-            index=$(_envr_get_index $KEY $_ENVR_PROJECT_OPTIONS)
+            local index=$(_envr_get_index "$KEY" "${_ENVR_PROJECT_OPTIONS[@]}")
             if [[ $index == $KEY_NOT_FOUND_ERROR ]] ; then
                 _ENVR_PROJECT_OPTIONS+=( "$KEY=$VALUE" )
             else
@@ -241,7 +241,7 @@ _envr_parse_config () {
 
         # update the list of new environment variables
         elif [[ "$envr_config_category" = "[VARIABLES]" ]] ; then
-            index=$(_envr_get_index $KEY $_ENVR_NEW_ENVIRONMENT_VARS)
+            local index=$(_envr_get_index "$KEY" "${_ENVR_NEW_ENVIRONMENT_VARS[@]}")
             if [[ $index == $KEY_NOT_FOUND_ERROR ]] ; then
                 _ENVR_NEW_ENVIRONMENT_VARS+=( "$KEY=$VALUE" )
             else
@@ -250,7 +250,7 @@ _envr_parse_config () {
         
         # update the list of new aliases
         elif [[ "$envr_config_category" = "[ALIASES]" ]] ; then
-            index=$(_envr_get_index $KEY $_ENVR_NEW_ALIASES)
+            local index=$(_envr_get_index "$KEY" "${_ENVR_NEW_ALIASES[@]}")
             if [[ $index == $KEY_NOT_FOUND_ERROR ]] ; then
                 _ENVR_NEW_ALIASES+=( "$KEY=$VALUE" )
             else
@@ -259,7 +259,7 @@ _envr_parse_config () {
 
         # update the list of additions to system PATH
         elif [[ "$envr_config_category" = "[ADD_TO_PATH]" ]] ; then
-            index=$(_envr_get_index $KEY $_ENVR_PATH_ADDITIONS)
+            local index=$(_envr_get_index "$KEY" "${_ENVR_PATH_ADDITIONS[@]}")
             if [[ $index == $KEY_NOT_FOUND_ERROR ]] ; then
                 _ENVR_PATH_ADDITIONS+=( "$KEY=$VALUE" )
             else
@@ -311,13 +311,18 @@ _envr_main () {
     _envr_check_for_config &&
     unsource nondestructive &&
     _envr_init_private_variables &&
+
+    # Always parse the default config first
+    _envr_parse_config "envr-default"
+
+    if [[ $? == 1 ]] ; then
+        unsource
+        return 1
+    fi
     
-    # Parse the local or default config
+    # Parse the local config
     if [[ $_ENVR_HAS_LOCAL_CONFIG = 1 ]] ; then
-        _envr_parse_config "envr-local"
-    else
-        echo -e "\033[0;33mUsing envr-default config, make a local config with:\n\033[0mcp envr-default envr-local"
-        _envr_parse_config "envr-default"
+        _envr_parse_config "envr-local" 
     fi
 
     if [[ $? == 1 ]] ; then
@@ -354,7 +359,7 @@ _envr_main () {
             local old_value=$(printf '%s\n' "${(P)key}")
         fi
         if [[ -n "$old_value" ]] ; then
-            _ENVR_OVERWRITTEN_ENVIRONMENT_VARS+=("${key}=${old_value}")
+            _ENVR_OVERWRITTEN_ENVIRONMENT_VARS+=( "${key}=${old_value}" )
         fi
 
         # expand the variables
