@@ -59,6 +59,8 @@ else
     return 1         
 fi
 
+KEY_NOT_FOUND_ERROR=255
+
 zsh_emulate_ksh () {
     if [[ -n "$ZSH_VERSION" ]] ; then
         emulate -L ksh
@@ -111,6 +113,14 @@ unsource () {
         export PS1
         unset _ENVR_OLD_ENVIRONMENT_PS1
     fi
+
+    # Remove project options:
+    for (( i = 0; i <= ${#_ENVR_PROJECT_OPTIONS[@]}; i++ )) ; do
+        local KEY=$(echo ${_ENVR_PROJECT_OPTIONS[i]/%=*/})
+        if [[ -n "${KEY:-}" ]] ; then
+            unset $KEY
+        fi
+    done
     
     # Remove added environment variables:
     for (( i = 0; i <= ${#_ENVR_NEW_ENVIRONMENT_VARS[@]}; i++ )) ; do
@@ -150,24 +160,44 @@ unsource () {
         unset _ENVR_HAS_LOCAL_CONFIG
     fi
 
-    unset _ENVR_PROJECT_NAME
-    unset _ENVR_PYTHON_VENV
+    unset _ENVR_PROJECT_OPTIONS
     unset _ENVR_NEW_ENVIRONMENT_VARS
     unset _ENVR_OVERWRITTEN_ENVIRONMENT_VARS
     unset _ENVR_NEW_ALIASES
     unset _ENVR_OVERWRITTEN_ALIASES
     unset _ENVR_NEW_PATH
+    unset _ENVR_PATH_ADDITIONS
     unset VIRTUAL_ENV_DISABLE_PROMPT
     unset ENVR_ROOT
     unset ENVR_PROJECT_NAME
 }
 
 _envr_init_private_variables () {
+    _ENVR_PROJECT_OPTIONS=()
     _ENVR_NEW_ENVIRONMENT_VARS=()
     _ENVR_OVERWRITTEN_ENVIRONMENT_VARS=()
     _ENVR_NEW_ALIASES=()
     _ENVR_OVERWRITTEN_ALIASES=()
+    _ENVR_PATH_ADDITIONS=()
     _ENVR_NEW_PATH="$PATH"
+}
+
+_envr_get_index () {
+    local key=$1
+    local list=$2
+
+    local list_length="${#list[@]}"
+    if [[ $list_length -gt 255 ]] ; then
+        exit 2  # can only return 0 - 255; not supporing more than 256 entries
+    fi
+
+    for (( i = 0; i <= $list_length; i++ )) ; do
+        local KEY=$(echo ${list[i]/%=*/})
+        if [[ "$key" = "$KEY" ]] ; then
+            return $i
+        fi
+    done
+    echo $KEY_NOT_FOUND_ERROR
 }
 
 _envr_parse_config () {
@@ -181,17 +211,8 @@ _envr_parse_config () {
     while IFS= read -r line <&3 || [[ -n "$line" ]] ; do
         config_file_line_number=$((config_file_line_number + 1))
 
-        # expand variables and trim whitespace and continue if line is blank
-        if [[ -n "${BASH:-}" ]] ; then
-            if [[ $(printf %.1s $BASH_VERSION) -ge 5 ]] ; then
-                local line="$(echo "${line@P}" | xargs)"
-            else  # bash < 4.4 doesn't have @P
-                local line="$(eval echo "$line" | xargs)"
-            fi
-        elif [[ -n "${ZSH_VERSION:-}" ]] ; then
-            local line="$(echo "${(e)line}" | xargs)"
-        fi
-
+        # trim whitespace and continue if line is blank
+        local line="$(echo $line | xargs)"
         if [[ "$line" = "" ]] ; then
             continue
         fi
@@ -208,67 +229,42 @@ _envr_parse_config () {
         # check for update to envr_config_category, choosing what is set
         if [[ "[" = $(echo ${line:0:1}) ]] ; then
             envr_config_category="$line"
-    
-        # set environment variables
-        elif [[ "$envr_config_category" = "[VARIABLES]" ]] ; then
-            # check if we are overwriting an environment variable
-            if [[ -n "${BASH:-}" ]] ; then
-                local OLD_VALUE=$(printf '%s\n' "${!KEY}")
-            elif [[ -n "${ZSH_VERSION:-}" ]] ; then
-                local OLD_VALUE=$(printf '%s\n' "${(P)KEY}")
-            fi
 
-            if [[ -n "$OLD_VALUE" ]] ; then
-                _ENVR_OVERWRITTEN_ENVIRONMENT_VARS+=("${KEY}=${OLD_VALUE}")
-            fi 
-            export "$line"
-            _ENVR_NEW_ENVIRONMENT_VARS+=( "$line" )
-        
-        # set project options
+        # update the list of project options
         elif [[ "$envr_config_category" = "[PROJECT_OPTIONS]" ]] ; then
-            case "$KEY" in
-                "PROJECT_NAME")
-                    _ENVR_PROJECT_NAME="$VALUE"
-                    export ENVR_PROJECT_NAME=$_ENVR_PROJECT_NAME;;
-                "PYTHON_VENV")
-                    _ENVR_PYTHON_VENV="$VALUE";;
-                *)
-                    echo -e "\033[0;31mERROR - line $config_file_line_number of ${config_file}: $line under section $envr_config_category unknown.\033[0m"
-                    unsource
-                    return 1;;
-            esac
-        
-        # set aliases
-        elif [[ "$envr_config_category" = "[ALIASES]" ]] ; then
-            # check if we are overwriting an alias
-            if [[ -n "${BASH:-}" ]] ; then
-                if [[ "$(type -t ${KEY})" = "alias" ]] ; then
-                    local ALIAS_OUTPUT=$(alias ${KEY})
-                    local OLD_VALUE=$(echo ${ALIAS_OUTPUT#alias })
-                    _ENVR_OVERWRITTEN_ALIASES+=("$OLD_VALUE")
-                fi 
-            elif [[ -n "${ZSH_VERSION:-}" ]] ; then 
-                if [[ ${+aliases[${KEY}]} ]] ; then
-                    local OLD_VALUE=$(alias ${KEY})
-                    _ENVR_OVERWRITTEN_ALIASES+=("$OLD_VALUE")
-                fi 
+            index=$(_envr_get_index $KEY $_ENVR_PROJECT_OPTIONS)
+            if [[ $index == $KEY_NOT_FOUND_ERROR ]] ; then
+                _ENVR_PROJECT_OPTIONS+=( "$KEY=$VALUE" )
+            else
+                _ENVR_PROJECT_OPTIONS[$index]="$KEY=$VALUE"
             fi
-            alias "$line"
-            _ENVR_NEW_ALIASES+=( "$line" )
 
-        # add paths to _ENVR_NEW_PATH
+        # update the list of new environment variables
+        elif [[ "$envr_config_category" = "[VARIABLES]" ]] ; then
+            index=$(_envr_get_index $KEY $_ENVR_NEW_ENVIRONMENT_VARS)
+            if [[ $index == $KEY_NOT_FOUND_ERROR ]] ; then
+                _ENVR_NEW_ENVIRONMENT_VARS+=( "$KEY=$VALUE" )
+            else
+                _ENVR_NEW_ENVIRONMENT_VARS[$index]="$KEY=$VALUE"
+            fi
+        
+        # update the list of new aliases
+        elif [[ "$envr_config_category" = "[ALIASES]" ]] ; then
+            index=$(_envr_get_index $KEY $_ENVR_NEW_ALIASES)
+            if [[ $index == $KEY_NOT_FOUND_ERROR ]] ; then
+                _ENVR_NEW_ALIASES+=( "$KEY=$VALUE" )
+            else
+                _ENVR_NEW_ALIASES[$index]="$KEY=$VALUE"
+            fi 
+
+        # update the list of additions to system PATH
         elif [[ "$envr_config_category" = "[ADD_TO_PATH]" ]] ; then
-            # make sure that the directory exists
-            if [[ ! -d "$VALUE" ]] ; then
-                echo -e "\033[0;31mERROR\033[0m - ${KEY}, line $config_file_line_number of ${config_file}: $VALUE is not a directory."
-                unsource
-                return 1
-            fi
-            # don't add duplicate directories to PATH
-            if [[ ":${_ENVR_NEW_PATH}:" == *":${VALUE}:"* ]]; then
-                continue
-            fi
-            _ENVR_NEW_PATH="${VALUE}:${_ENVR_NEW_PATH}"
+            index=$(_envr_get_index $KEY $_ENVR_PATH_ADDITIONS)
+            if [[ $index == $KEY_NOT_FOUND_ERROR ]] ; then
+                _ENVR_PATH_ADDITIONS+=( "$KEY=$VALUE" )
+            else
+                _ENVR_PATH_ADDITIONS[$index]="$KEY=$VALUE"
+            fi 
 
         # parsing error
         else
@@ -328,6 +324,92 @@ _envr_main () {
         unsource
         return 1
     fi
+
+    # Apply the project options
+    for option in "${_ENVR_PROJECT_OPTIONS[@]}"; do
+        local key=$(echo ${option/%=*/})
+        local value=$(echo ${option#${key}=})
+
+        case "$key" in
+            "PROJECT_NAME")
+                _ENVR_PROJECT_NAME="$value"
+                export ENVR_PROJECT_NAME=$_ENVR_PROJECT_NAME;;
+            "PYTHON_VENV")
+                _ENVR_PYTHON_VENV="$value";;
+            *)
+                echo -e "\033[0;31mERROR - line $config_file_line_number of ${config_file}: $line under section $envr_config_category unknown.\033[0m"
+                unsource
+                return 1;;
+        esac
+    done
+
+    # Apply the environment changes
+    for env_var in "${_ENVR_NEW_ENVIRONMENT_VARS[@]}"; do
+        local key=$(echo ${env_var/%=*/})
+
+        # check if we are overwriting an existing environment variable
+        if [[ -n "${BASH:-}" ]] ; then
+            local old_value=$(printf '%s\n' "${!key}")
+        elif [[ -n "${ZSH_VERSION:-}" ]] ; then
+            local old_value=$(printf '%s\n' "${(P)key}")
+        fi
+        if [[ -n "$old_value" ]] ; then
+            _ENVR_OVERWRITTEN_ENVIRONMENT_VARS+=("${key}=${old_value}")
+        fi
+
+        # expand the variables
+        if [[ -n "${BASH:-}" ]] ; then
+            if [[ $(printf %.1s $BASH_VERSION) -ge 5 ]] ; then
+                env_var="${env_var@P}"
+            else  # bash < 4.4 doesn't have @P
+                env_var="$(eval echo "$env_var")"
+            fi
+        elif [[ -n "${ZSH_VERSION:-}" ]] ; then
+            env_var="${(e)env_var}"
+        fi
+        
+        export "$env_var"
+    done
+
+    # Apply the the new aliases and save overwrites
+    for alias in "${_ENVR_NEW_ALIASES[@]}"; do
+        local key=$(echo ${alias/%=*/})
+        local value=$(echo ${alias#${key}=})
+
+        # check if we are overwriting an alias
+        if [[ -n "${BASH:-}" ]] ; then
+            if [[ "$(type -t ${key})" = "alias" ]] ; then
+                local alias_output=$(alias ${key})
+                local old_value=$(echo ${alias_output#alias })
+                _ENVR_OVERWRITTEN_ALIASES+=("$old_value")
+            fi 
+        elif [[ -n "${ZSH_VERSION:-}" ]] ; then 
+            if [[ ${+aliases[${key}]} ]] ; then
+                local old_value=$(alias ${key})
+                _ENVR_OVERWRITTEN_ALIASES+=("$old_value")
+            fi 
+        fi
+        alias "$key=$value"
+    done
+
+    # Apply additions to the system PATH
+    for path_dir in "${_ENVR_PATH_ADDITIONS[@]}"; do
+        local key=$(echo ${path_dir/%=*/})
+        local value=$(echo ${path_dir#${key}=})
+
+        # make sure that the directory exists
+        if [[ ! -d "$value" ]] ; then
+            echo -e "\033[0;31mERROR\033[0m - ${KEY}, line $config_file_line_number of ${config_file}: $value is not a directory."
+            unsource
+            return 1
+        fi
+        # don't add duplicate directories to PATH
+        if [[ ":${_ENVR_NEW_PATH}:" == *":${value}:"* ]]; then
+            continue
+        fi
+        _ENVR_NEW_PATH="${value}:${_ENVR_NEW_PATH}"
+    
+    done
 
     # Save the unmodified PATH and export the new one
     _ENVR_OLD_PATH="$PATH"
