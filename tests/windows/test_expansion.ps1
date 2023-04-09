@@ -15,6 +15,9 @@ function global:expansion () {
     $TEST_RES += assertEqual bar42 $env:COMBINED
     $TEST_RES += assertEqual "$(Get-Location)/path/to/resource/bar42" $env:COMBINED_PATH
 
+    $TEST_RES += assertContains $env:path "$(Get-Location)/tests/fixtures$([System.IO.Path]::PathSeparator)"
+    $TEST_RES += assertContains $env:path "$(Get-Location)/path/to/resource/bar42$([System.IO.Path]::PathSeparator)"
+
     unsource
 
     $TEST_RES += assertNotInEnv ENVR_ROOT

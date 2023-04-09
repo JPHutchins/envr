@@ -13,13 +13,15 @@ assertContains "$OLD_ENV" "USER_VAR=original user value"
 
 . ./envr.ps1
 
-assertEqual "$OLD_PATH" "$PATH"                
 assertEqual "$OLD_ALS" "$(alias)"              
 
 assertEqual "$(pwd)" "$ENVR_ROOT"
 assertEqual "$(pwd)/path/to/resource" $ABS_PATH_EXAMPLE
 assertEqual bar42 $COMBINED
 assertEqual "$(pwd)/path/to/resource/bar42" $COMBINED_PATH
+
+assertContains "$PATH" "$(pwd)/tests/fixtures"
+assertContains "$PATH" "$(pwd)/path/to/resource/bar42"
 
 unsource
 

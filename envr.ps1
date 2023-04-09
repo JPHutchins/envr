@@ -1,4 +1,4 @@
-# envr v0.4.0
+# envr v0.5.0
 # https://www.github.com/JPHutchins/envr
 # https://www.crumpledpaper.tech
 
@@ -6,23 +6,7 @@
 # Copyright (c) 2022 J.P. Hutchins
 # License text at the bottom of this source file
 
-# Use with "source" from *bash* or *Windows PowerShell*
-# Usage:
-#   bash $> . envr.ps1
-#   zsh $> . ./envr.ps1
-#   WinPS $> . ./envr.ps1
-# You cannot use it directly; it will not set your environment variables.
-
-# Installation (optional)
-# - Windows PowerShell
-#   - Add the installation location to your system PATH
-#   - Usage:
-#     WinPS $> . envr
-# - BASH
-#   - Alias or link envr.ps1 as envr
-#   - Add it to your system PATH (or add a link to a folder that is in PATH)
-#   - Usage:
-#     bash $> . envr
+# Usage: . ./envr.ps1
 
 # The following line is for PowerShell/bash cross compatability.
 # - The bash section shall begin with the delimiter "<#'"
@@ -402,17 +386,27 @@ _envr_main () {
         local key=$(echo ${path_dir/%=*/})
         local value=$(echo ${path_dir#${key}=})
 
-        # make sure that the directory exists
-        if [[ ! -d "$value" ]] ; then
-            echo -e "\033[0;31mERROR\033[0m - ${KEY}, line $config_file_line_number of ${config_file}: $value is not a directory."
-            unsource
-            return 1
+        local dir=""
+        # expand the variables
+        if [[ -n "${BASH:-}" ]] ; then
+            if [[ $(printf %.1s $BASH_VERSION) -ge 5 ]] ; then
+                dir="${value@P}"
+            else  # bash < 4.4 doesn't have @P
+                dir="$(eval echo "$value")"
+            fi
+        elif [[ -n "${ZSH_VERSION:-}" ]] ; then
+            dir="${(e)value}"
+        fi
+
+        # warn if the directory does not exist
+        if [[ ! -d "$dir" ]] ; then
+            echo -e "\033[0;33mWARNING\033[0m - ${key}=$dir is not a directory."
         fi
         # don't add duplicate directories to PATH
-        if [[ ":${_ENVR_NEW_PATH}:" == *":${value}:"* ]]; then
+        if [[ ":${_ENVR_NEW_PATH}:" == *":${dir}:"* ]]; then
             continue
         fi
-        _ENVR_NEW_PATH="${value}:${_ENVR_NEW_PATH}"
+        _ENVR_NEW_PATH="${dir}:${_ENVR_NEW_PATH}"
     
     done
 
@@ -694,12 +688,18 @@ $global:_ENVR_NEW_ALIASES.GetEnumerator().ForEach({
 })
 
 # Apply the additions to the system PATH
-foreach ($val in $global:_ENVR_PATH_ADDITIONS.Values) {
+$global:_ENVR_PATH_ADDITIONS.GetEnumerator().ForEach({
+    $key = $($_.Key)
+    $val = $($_.Value)
+
+    # expand the variables
+    if ($null -ne $val) {
+        $val = $ExecutionContext.InvokeCommand.ExpandString($val.Replace('$', '$env:'))
+    }
+
     if (Test-Path -Path "$val") {
     } else {
-        Write-Host "$val is not a directory." -ForegroundColor Red
-        unsource
-        return
+        Write-Host "WARNING - $key=$val is not a directory." -ForegroundColor Yellow
     }
     foreach ($folder in $(Get-Item env:path).value.split($([System.IO.Path]::PathSeparator))) {
         if ($folder -eq $val) {
@@ -711,7 +711,7 @@ foreach ($val in $global:_ENVR_PATH_ADDITIONS.Values) {
     }
 
     $Env:PATH = "$val$([System.IO.Path]::PathSeparator)$Env:PATH"
-}
+})
 
 # Activate the python venv if specified
 if (-not $global:_ENVR_PYTHON_VENV -eq "") {
