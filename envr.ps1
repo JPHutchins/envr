@@ -433,6 +433,22 @@ _envr_main
 true << 'POWERSHELL_SECTION'
 #>
 
+# parse the environment file and setup
+$global:_ENVR_PROJECT_OPTIONS = @{}
+$global:_ENVR_NEW_ENVIRONMENT_VARS = [ordered]@{}
+$global:_ENVR_OVERWRITTEN_ENVIRONMENT_VARS = @{}
+$global:_ENVR_NEW_ALIASES = [ordered]@{}
+$global:_ENVR_OVERWRITTEN_ALIASES = @{}
+$global:_ENVR_PATH_ADDITIONS = @{}
+
+# setup helpers for alias hack
+$global:_ALIAS_FN_INDEX = 0
+$global:_ALIAS_COMMAND_ARR = @()
+$global:_ALIAS_ARGS_ARR = @()
+
+$global:_ENVR_PROJECT_NAME = $null
+$global:_ENVR_PYTHON_VENV = $null
+
 function global:unsource ([switch]$NonDestructive) {
     # Revert to original values
 
@@ -459,46 +475,39 @@ function global:unsource ([switch]$NonDestructive) {
     }
 
     # Remove added environment variables:
-    foreach ($env_var in $_NEW_ENVIRONMENT_VARS) {
-        $_TEMP_ARRAY = $env_var.split("=")
-        $KEY = $_TEMP_ARRAY[0]
-
-        if (Test-Path -Path env:$KEY) {
-            Remove-Item -Path env:$KEY
+    foreach ($key in $global:_ENVR_NEW_ENVIRONMENT_VARS.Keys) {
+        if (Test-Path -Path env:$key) {
+            Remove-Item -Path env:$key
         }
     }
     # And restore any environment variables that were overwritten:
-    foreach ($env_var in $_OVERWRITTEN_ENVIRONMENT_VARS) {
-        $_TEMP_ARRAY = $env_var.split("=")
-        $KEY = $_TEMP_ARRAY[0]
-        $VALUE = $_TEMP_ARRAY[1]
+    $global:_ENVR_OVERWRITTEN_ENVIRONMENT_VARS.GetEnumerator().ForEach({
+        $key = $($_.Key)
+        $val = $($_.Value)
 
-        if (Test-Path -Path env:$KEY) {
-            Write-Host "ERROR: $KEY should have been removed already!"
+        if (Test-Path -Path env:$key) {
+            Write-Host "ERROR: $key should have been removed already!"
             return 1
         }
-        Set-Item -Path env:$KEY -Value $VALUE
-    }
+        Set-Item -Path env:$key -Value $val
+    })
 
     # Remove added aliases:
-    foreach ($alias in $_NEW_ALIASES) {
-        $KEY = $alias.split("=")[0]
-
-        if (Test-Path -Path alias:$KEY) {
-            Remove-Item alias:$KEY
+    foreach ($key in $global:_ENVR_NEW_ALIASES.Keys) {
+        if (Test-Path -Path alias:$key) {
+            Remove-Item alias:$key
         }
         else {
-            Write-Host "WARNING: alias $KEY was removed already!"
+            Write-Host "WARNING: alias $key was removed already!"
         }
     }
     # And restore any aliases that were overwritten:
-    foreach ($alias in $_OVERWRITTEN_ALIASES) {
-        $_TEMP_ARRAY = $alias.split("=")
-        $KEY = $_TEMP_ARRAY[0]
-        $VALUE = $_TEMP_ARRAY[1]
+    $global:_ENVR_OVERWRITTEN_ALIASES.GetEnumerator().ForEach({
+        $key = $($_.Key)
+        $val = $($_.Value)
 
-        Set-Alias $KEY $VALUE -Scope Global -Option AllScope -Force
-    }
+        Set-Alias $key $val -Scope Global -Option AllScope -Force
+    })
 
     # Leave unsource function in the global namespace if requested:
     if (-not $NonDestructive) {
@@ -532,15 +541,47 @@ function global:unsource ([switch]$NonDestructive) {
     }
 }
 
-# Check for config
-if (Test-Path -Path envr-local) {
-    $_ENVR_CONFIG = "envr-local"
-} elseif (Test-Path -Path envr-default) {
-    $_ENVR_CONFIG = "envr-default"
-} else {
-    Write-Host "ERROR: an envr-local or envr-default configuration file must exist." -ForegroundColor Red
-    unsource
-    return
+function global:parse($config) {
+    $category = "INITIAL"
+    foreach ($line in Get-Content $config) {
+        # trim whitespace and continue if line is blank 
+        $line = $line.Trim()
+        if ($line -eq "") {
+            continue
+        }
+
+        # ignore comments
+        if ($line.SubString(0,1) -eq "#") {
+            continue
+        }
+
+        # get key value of entry, if any, e.g. KEY=VALUE
+        $_TEMP_ARRAY = $line.split("=")
+        $KEY = $_TEMP_ARRAY[0]
+        $VALUE = $_TEMP_ARRAY[1]
+
+        # check for update to _CATEGORY, choosing what is set
+        if ($line.SubString(0,1) -eq "[") {
+            $category = $line
+        }
+
+        # update the hashtable of project options
+        elseif ($category -eq "[PROJECT_OPTIONS]") {
+            $global:_ENVR_PROJECT_OPTIONS[$KEY] = $VALUE
+        }
+        # update the hashtable of environment variables
+        elseif ($category -eq "[VARIABLES]") {
+            $global:_ENVR_NEW_ENVIRONMENT_VARS[$KEY] = $VALUE
+        }
+        # update the hashtable of new aliases
+        elseif ($category -eq "[ALIASES]") {
+            $global:_ENVR_NEW_ALIASES[$KEY] = $VALUE
+        }
+        # update the hashtable of additions to system PATH
+        elseif ($category -eq "[ADD_TO_PATH]") {
+            $global:_ENVR_PATH_ADDITIONS[$KEY] = $VALUE
+        }
+    }
 }
 
 # Deactivate any currently active virtual environment, but leave the
@@ -550,139 +591,135 @@ unsource -nondestructive
 # Save the old path
 Copy-Item -Path Env:PATH -Destination Env:_OLD_PATH
 
-# parse the environment file and setup
-$_CATEGORY = "INITIAL"
-$_NEW_ENVIRONMENT_VARS = @()
-$_OVERWRITTEN_ENVIRONMENT_VARS = @()
-$_NEW_ALIASES = @()
-$_OVERWRITTEN_ALIASES = @()
-$_ALIAS_FN_INDEX = 0
-$_ALIAS_COMMAND_ARR = @()
-$_ALIAS_ARGS_ARR = @()
-
 New-Variable -Name ENVR_ROOT -Description "envr parent folder path" -Scope Global -Option ReadOnly -Visibility Public -Value "$PSScriptRoot"
-Set-Item -Path env:ENVR_ROOT -Value $ENVR_ROOT
-$_NEW_ENVIRONMENT_VARS += "ENVR_ROOT=$ENVR_ROOT"
+$global:_ENVR_NEW_ENVIRONMENT_VARS["ENVR_ROOT"] = $ENVR_ROOT
 
-foreach ($line in Get-Content $_ENVR_CONFIG) {
-    # trim whitespace and continue if line is blank 
-    $line = $line.Trim()
-    if ($line -eq "") {
-        continue
-    }
+# Always parse the default config first
+if (Test-Path -Path envr-default) {
+    parse envr-default
+} else {
+    Write-Host "ERROR: an envr-default configuration file must exist." -ForegroundColor Red
+    unsource
+    return
+}    
 
-    # ignore comments
-    if ($line.SubString(0,1) -eq "#") {
-        continue
-    }
+# Check for local config
+if (Test-Path -Path envr-local) {
+    parse envr-local
+}
 
-    # get key value of entry, if any, e.g. KEY=VALUE
-    $_TEMP_ARRAY = $line.split("=")
-    $KEY = $_TEMP_ARRAY[0]
-    $VALUE = $_TEMP_ARRAY[1]
-    if ($null -ne $VALUE) {
-        $VALUE = $ExecutionContext.InvokeCommand.ExpandString($VALUE.Replace('$', '$env:'))
-    }
+# Apply the project options
+$global:_ENVR_PROJECT_OPTIONS.GetEnumerator().ForEach({
+    $key = $($_.Key)
+    $val = $($_.Value)
 
-    # check for update to _CATEGORY, choosing what is set
-    if ($line.SubString(0,1) -eq "[") {
-        $_CATEGORY = $line
-    }
-
-    # set environment variables
-    elseif ($_CATEGORY -eq "[VARIABLES]") {
-        # check if we are overwriting an environment variable
-        if (Test-Path -Path env:$KEY) {
-            $OLD_VALUE = [System.Environment]::GetEnvironmentVariable($KEY)
-            $_OVERWRITTEN_ENVIRONMENT_VARS += "$KEY=$OLD_VALUE"
+    switch ($key)
+    {
+        "PROJECT_NAME" { 
+            $global:_ENVR_PROJECT_NAME = $val
+            Set-Item -Path env:ENVR_PROJECT_NAME -Value $val
+            $global:_ENVR_NEW_ENVIRONMENT_VARS["ENVR_PROJECT_NAME"] = $val
         }
-        Set-Item -Path env:$KEY -Value $VALUE
-        $_NEW_ENVIRONMENT_VARS += "$KEY=$VALUE"
+        "PYTHON_VENV" { $global:_ENVR_PYTHON_VENV = $val }
     }
+    
+})
 
-    # set project options
-    elseif ($_CATEGORY -eq "[PROJECT_OPTIONS]") {
-        switch ($KEY)
-        {
-            "PROJECT_NAME" { 
-                $_PROJECT_NAME = $VALUE
-                Set-Item -Path env:ENVR_PROJECT_NAME -Value $VALUE
-                $_NEW_ENVIRONMENT_VARS += "ENVR_PROJECT_NAME=$VALUE"
-            }
-            "PYTHON_VENV" { $_PYTHON_VENV = $VALUE }
-        }
-    }
+# Apply the environment changes
+$global:_ENVR_NEW_ENVIRONMENT_VARS.GetEnumerator().ForEach({
+    $key = $($_.Key)
+    $val = $($_.Value)
 
-    # set aliases
-    elseif ($_CATEGORY -eq "[ALIASES]") {
-        # check if we are overwriting an alias
-        if (Test-Path -Path alias:$KEY) {
-            $_OLD_ALIAS = $((Get-Alias $KEY).Definition)
-            $_OVERWRITTEN_ALIASES += "$KEY=$_OLD_ALIAS"
-            Remove-Item -Path Alias:$KEY
-        }
-        if ($_ALIAS_FN_INDEX -eq 10) {
-            Write-Host "ERROR: only $_ALIAS_FN_INDEX aliases allowed!"
-            return 1
-        }
-        $_TEMP_ARRAY = $VALUE.split(" ")
-        $_ALIAS_COMMAND_ARR += ,$_TEMP_ARRAY[0]
-        if ($_TEMP_ARRAY.Length -ge 2) {
-            $_args = @()
-            for (($i = 1); $i -lt $_TEMP_ARRAY.Length; $i++) {
-                # Expand the args to use any environment variables 
-                $_args += ,$ExecutionContext.InvokeCommand.ExpandString($_TEMP_ARRAY[$i])
-            }
-            $_ALIAS_ARGS_ARR += ,$_args
-        }
-        else {
-            $_ALIAS_ARGS_ARR += ,""
-        }
-
-        # Hack to support aliases with parameters
-        function _ENVR_ALIAS_FN_0 { . $_ALIAS_COMMAND_ARR[0] $_ALIAS_ARGS_ARR[0] }
-        function _ENVR_ALIAS_FN_1 { . $_ALIAS_COMMAND_ARR[1] $_ALIAS_ARGS_ARR[1] }
-        function _ENVR_ALIAS_FN_2 { . $_ALIAS_COMMAND_ARR[2] $_ALIAS_ARGS_ARR[2] }
-        function _ENVR_ALIAS_FN_3 { . $_ALIAS_COMMAND_ARR[3] $_ALIAS_ARGS_ARR[3] }
-        function _ENVR_ALIAS_FN_4 { . $_ALIAS_COMMAND_ARR[4] $_ALIAS_ARGS_ARR[4] }
-        function _ENVR_ALIAS_FN_5 { . $_ALIAS_COMMAND_ARR[5] $_ALIAS_ARGS_ARR[5] }
-        function _ENVR_ALIAS_FN_6 { . $_ALIAS_COMMAND_ARR[6] $_ALIAS_ARGS_ARR[6] }
-        function _ENVR_ALIAS_FN_7 { . $_ALIAS_COMMAND_ARR[7] $_ALIAS_ARGS_ARR[7] }
-        function _ENVR_ALIAS_FN_8 { . $_ALIAS_COMMAND_ARR[8] $_ALIAS_ARGS_ARR[8] }
-        function _ENVR_ALIAS_FN_9 { . $_ALIAS_COMMAND_ARR[9] $_ALIAS_ARGS_ARR[9] }
-        Set-Alias -Name $KEY -Value "_ENVR_ALIAS_FN_$_ALIAS_FN_INDEX"
-        $_NEW_ALIASES += $line
-        $_ALIAS_FN_INDEX += 1
-    }
-
-    # add to PATH
-    elseif ($_CATEGORY -eq "[ADD_TO_PATH]") {
-        if (Test-Path -Path $VALUE) {
-        } else {
-            Write-Host "$VALUE is not a directory." -ForegroundColor Red
+    # check if we are overwriting an environment variable
+    if (Test-Path -Path env:$key) {
+        $original_val = [System.Environment]::GetEnvironmentVariable($key)
+        if ($global:_ENVR_OVERWRITTEN_ENVIRONMENT_VARS.ContainsKey($key)) {
+            Write-Host "Error: variable $key is already overwritten"
             unsource
-            return
+            exit 1
         }
-        foreach ($folder in $(Get-Item env:path).value.split($([System.IO.Path]::PathSeparator))) {
-            if ($folder -eq $VALUE) {
-                $duplicate = 1
-            }
-        }
-        if ($duplicate -eq 1) {
-            continue
-        }
-
-        $Env:PATH = "$VALUE$([System.IO.Path]::PathSeparator)$Env:PATH"
+        $global:_ENVR_OVERWRITTEN_ENVIRONMENT_VARS[$key] = $original_val
     }
+
+    # expand the variables
+    if ($null -ne $val) {
+        $val = $ExecutionContext.InvokeCommand.ExpandString($val.Replace('$', '$env:'))
+    }
+
+    Set-Item -Path env:$key -Value $val
+})
+
+# Apply the new aliases and save overwrites
+$global:_ENVR_NEW_ALIASES.GetEnumerator().ForEach({
+    $key = $($_.Key)
+    $val = $($_.Value)
+
+    # check if we are overwriting an alias
+    if (Test-Path -Path alias:$key) {
+        $_OLD_ALIAS = $((Get-Alias $key).Definition)
+        $global:_ENVR_OVERWRITTEN_ALIASES[$key] =$_OLD_ALIAS
+        Remove-Item -Path Alias:$key
+    }
+    if ($global:_ALIAS_FN_INDEX -eq 10) {
+        Write-Host "ERROR: only $global:_ALIAS_FN_INDEX aliases allowed!"
+        return 1
+    }
+    $_TEMP_ARRAY = $val.split(" ")
+    $global:_ALIAS_COMMAND_ARR += ,$_TEMP_ARRAY[0]
+    if ($_TEMP_ARRAY.Length -ge 2) {
+        $_args = @()
+        for (($i = 1); $i -lt $_TEMP_ARRAY.Length; $i++) {
+            # Expand the args to use any environment variables 
+            $_args += ,$ExecutionContext.InvokeCommand.ExpandString($_TEMP_ARRAY[$i])
+        }
+        $global:_ALIAS_ARGS_ARR += ,$_args
+    }
+    else {
+        $global:_ALIAS_ARGS_ARR += ,""
+    }
+
+    # Hack to support aliases with parameters
+    function _ENVR_ALIAS_FN_0 { . $global:_ALIAS_COMMAND_ARR[0] $global:_ALIAS_ARGS_ARR[0] }
+    function _ENVR_ALIAS_FN_1 { . $global:_ALIAS_COMMAND_ARR[1] $global:_ALIAS_ARGS_ARR[1] }
+    function _ENVR_ALIAS_FN_2 { . $global:_ALIAS_COMMAND_ARR[2] $global:_ALIAS_ARGS_ARR[2] }
+    function _ENVR_ALIAS_FN_3 { . $global:_ALIAS_COMMAND_ARR[3] $global:_ALIAS_ARGS_ARR[3] }
+    function _ENVR_ALIAS_FN_4 { . $global:_ALIAS_COMMAND_ARR[4] $global:_ALIAS_ARGS_ARR[4] }
+    function _ENVR_ALIAS_FN_5 { . $global:_ALIAS_COMMAND_ARR[5] $global:_ALIAS_ARGS_ARR[5] }
+    function _ENVR_ALIAS_FN_6 { . $global:_ALIAS_COMMAND_ARR[6] $global:_ALIAS_ARGS_ARR[6] }
+    function _ENVR_ALIAS_FN_7 { . $global:_ALIAS_COMMAND_ARR[7] $global:_ALIAS_ARGS_ARR[7] }
+    function _ENVR_ALIAS_FN_8 { . $global:_ALIAS_COMMAND_ARR[8] $global:_ALIAS_ARGS_ARR[8] }
+    function _ENVR_ALIAS_FN_9 { . $global:_ALIAS_COMMAND_ARR[9] $global:_ALIAS_ARGS_ARR[9] }
+    Set-Alias -Name $key -Value "_ENVR_ALIAS_FN_$global:_ALIAS_FN_INDEX"
+    $global:_ALIAS_FN_INDEX += 1
+})
+
+# Apply the additions to the system PATH
+foreach ($val in $global:_ENVR_PATH_ADDITIONS.Values) {
+    if (Test-Path -Path "$val") {
+    } else {
+        Write-Host "$val is not a directory." -ForegroundColor Red
+        unsource
+        return
+    }
+    foreach ($folder in $(Get-Item env:path).value.split($([System.IO.Path]::PathSeparator))) {
+        if ($folder -eq $val) {
+            $duplicate = 1
+        }
+    }
+    if ($duplicate -eq 1) {
+        continue
+    }
+
+    $Env:PATH = "$val$([System.IO.Path]::PathSeparator)$Env:PATH"
 }
 
 # Activate the python venv if specified
-if (-not $_PYTHON_VENV -eq "") {
+if (-not $global:_ENVR_PYTHON_VENV -eq "") {
     if (-not $Env:ENVIRONMENT_DISABLE_PROMPT) {
         # We're going to set envr prompt; disable the python (venv) prompt
         Set-Item -Path env:VIRTUAL_ENV_DISABLE_PROMPT -Value "true"
     }
-    . "$_PYTHON_VENV/Scripts/Activate.ps1"
+    . "$global:_ENVR_PYTHON_VENV/Scripts/Activate.ps1"
 }
 
 # Set the prompt prefix
@@ -694,8 +731,8 @@ if (-not $Env:ENVIRONMENT_DISABLE_PROMPT) {
     Copy-Item -Path function:prompt -Destination function:_OLD_VIRTUAL_PROMPT
 
     $prompt = "(envr) "
-    if (-not $_PROJECT_NAME -eq "") {
-        $prompt = "($_PROJECT_NAME) " 
+    if (-not $global:_ENVR_PROJECT_NAME -eq "") {
+        $prompt = "($global:_ENVR_PROJECT_NAME) " 
     }
     New-Variable -Name _ENVAR_PROMPT_PREFIX -Description "Python virtual environment prompt prefix" -Scope Global -Option ReadOnly -Visibility Public -Value $prompt
 

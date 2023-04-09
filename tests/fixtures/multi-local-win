@@ -1,0 +1,14 @@
+# example envr-local overwriting an envr-default (multi-default)
+
+[PROJECT_OPTIONS]
+    PROJECT_NAME=2a
+[ALIASES]
+    new_alias=echo new_alias
+    user_alias=echo 2c
+[VARIABLES]
+    FOO=2d
+    USER_VAR=2e
+    NEW_VAR=new_var
+[ADD_TO_PATH]
+    HOME_HAHA=C:\Windows\Logs
+    NEW_PATH=C:\Windows\Help

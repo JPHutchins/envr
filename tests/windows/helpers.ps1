@@ -71,7 +71,14 @@ $EMOJI_POOP = [char]::ConvertFromUtf32(0x1F4A9)
 
 function global:runTest ($name) {
     Write-Host "`tTesting $name " -NoNewline
-    Copy-Item tests/fixtures/$name envr-local
+    if ($name -eq "multi") {
+        Copy-Item tests/fixtures/multi-default-win envr-default
+        Copy-Item tests/fixtures/multi-local-win envr-local
+    }
+    else {
+        Copy-Item tests/fixtures/empty envr-default
+        Copy-Item tests/fixtures/$name envr-local
+    }
     $TEST_RES = & $name
     if ($TEST_RES -eq 0) {
         Write-Host "`r$EMOJI_WHITE_HEAVY_CHECK_MARK`n`t`t$name passed! $EMOJI_FACE_WITH_PARTY_HORN" -ForegroundColor Green
@@ -79,6 +86,7 @@ function global:runTest ($name) {
     else {
         Write-Host "`r$EMOJI_CROSS_MARK`n`t`t$name failed! $EMOJI_POOP" -ForegroundColor Red
     }
+    Remove-Item .\envr-default
     Remove-Item .\envr-local
 
     return $TEST_RES
