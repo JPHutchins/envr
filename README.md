@@ -25,7 +25,7 @@ Deactivate the environment: `unsource`
 
 * Download and commit `envr.ps1` to the root of your repository
   * Linux/Mac/Windows (`wget`): `wget https://github.com/JPHutchins/envr/releases/latest/download/envr.ps1`
-  * Windows (no `wget`): `Invoke-WebRequest -OutFile envr.ps1 -Uri https://github.com/JPHutchins/envr/releases/latest/download/envr.ps1load/envr.ps1`
+  * Windows (no `wget`): `Invoke-WebRequest -OutFile envr.ps1 -Uri https://github.com/JPHutchins/envr/releases/latest/download/envr.ps1`
 * Create, define and commit `envr-default` to the root of your repository.
 * Modify your `.gitignore` to ignore `envr-local`.
 
