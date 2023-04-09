@@ -7,14 +7,17 @@ function global:path_win () {
 
     $TEST_RES += assertContains $env:OLD_PATH "C:\Windows$([System.IO.Path]::PathSeparator)"
     $TEST_RES += assertNotContains $env:OLD_PATH "C:\Users$([System.IO.Path]::PathSeparator)"
+    $TEST_RES += assertNotContains $env:path "C:\Program Files (x86)$([System.IO.Path]::PathSeparator)"
 
     . ./envr.ps1
 
     $TEST_RES += assertContains $env:path "C:\Users$([System.IO.Path]::PathSeparator)"
+    $TEST_RES += assertContains $env:path "C:\Program Files (x86)$([System.IO.Path]::PathSeparator)"
 
     unsource
 
     $TEST_RES += assertNotContains $env:OLD_PATH "C:\Users$([System.IO.Path]::PathSeparator)"
+    $TEST_RES += assertNotContains $env:path "C:\Program Files (x86)$([System.IO.Path]::PathSeparator)"
     $TEST_RES += assertEqual $env:OLD_PATH $env:path
 
     return $TEST_RES
