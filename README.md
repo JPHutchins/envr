@@ -13,55 +13,67 @@ envr is a *self-contained cross-platform script* (envr.ps1) that allows develope
 
 ## Compatibility
 
-envr can be used with bash, zsh, and PowerShell in Linux, Windows, and MacOS.  See the [github workflows](.github/workflows).
+envr can be used with bash, zsh, and PowerShell in Linux, Windows, and MacOS.  See the [github workflows](.github/workflows) for more information on the shells that are tested.
 
 # Usage
 
-## Setup
+Activate the environment: `. ./envr.ps1`
 
-* Copy and commit `envr.ps1` to the root of your repository.
+Deactivate the environment: `unsource`
+
+## Adding envr to Your Repository
+
+* Download and commit `envr.ps1` to the root of your repository
+  * Linux/Mac/Windows (`wget`): `wget https://github.com/JPHutchins/envr/releases/latest/download/envr.ps1`
+  * Windows (no `wget`): `Invoke-WebRequest -OutFile envr.ps1 -Uri https://github.com/JPHutchins/envr/releases/latest/download/envr.ps1load/envr.ps1`
 * Create, define and commit `envr-default` to the root of your repository.
-* Modify your `.gitignore` to ignore `envr-local` and commit.
-* Add documentation instructing users to `cp envr-default envr-local` in order to resolve local differences
+* Modify your `.gitignore` to ignore `envr-local`.
 
 ## Define Your Environment in envr-default
 
-`envr-default` (and `envr-local`) is just a text file of the following shape.  Currently four categories are supported, marked by `[ ]`.  Environment definitions are in the format `KEY=VALUE`.
+`envr-default` (and `envr-local`) is a INI/TOML-ish text file of the following shape.  Currently four categories are supported, marked by `[ ]`.  Definitions are in the format `KEY=VALUE`.
 
-```ini
-# An example using all current categories
+Note: inline comments are not supported
 
+```toml
 [PROJECT_OPTIONS]
-    PROJECT_NAME=coolrepo
-    PYTHON_VENV=venv
-[ALIASES]
-    build=make -j 14 -DDEFAULTS=1
-    release=make -j 14 -DOPTION=2 -DSWITCH=5
-    clean=make clean
+# This sets the environment variable ENVR_PROJECT_NAME for use by the environment
+PROJECT_NAME=coolrepo
+# If you have a python venv, envr can activate it along with the envr environment
+PYTHON_VENV=venv
+
 [VARIABLES]
-    FOO=bar
-    ANSWER=42
-    STACK_SIZE=2048
-    CONFIG_DEBUG=1
-    PATH_SNOOPY_TOOL=~/chuck/ext/plugins/x86/v436.874/snoopy-ext/bin
+FOO=bar
+ANSWER=42
+PLUGINS=~/chuck/ext/plugins
+# Environment variables can use other environment variables
+PATH_SNOOPY_TOOL=$PLUGINS/x86/v436.874/snoopy-ext/bin
+
 [ADD_TO_PATH]
-    # Here, the key "GROOBER_PATH" is not exported to PATH but rather
-    # it is used internally to keep track of modifications to PATH
-    GROOBER_PATH=~/opt/supercollider/system/x86/bin
+# Here, the key "TOOLCHAIN_PATH" is not exported to PATH but rather
+# it is used internally to keep track of modifications to PATH
+TOOLCHAIN_PATH=/opt/supercollider/system/arm32/bin
+# ENVR_ROOT is an environment variable set by envr
+# It is the full path to envr.ps1 (the root of your repo)
+BINARIES=$ENVR_ROOT/build/bin
+
+[ALIASES]
+build=cmake -GNinja -Bbuild -DBOARD=hrv43 -DCMAKE_BUILD_TYPE=Debug -DLOG_LEVEL=INFO && cmake --build build
+flash=cmake -GNinja -Bbuild -DBOARD=hrv43 -DCMAKE_BUILD_TYPE=Debug -DLOG_LEVEL=INFO && cmake --build build --target flash
 ```
 
 ## Use the Environment Definition
 
 * `. ./envr.ps1` from the root of your repository.
-  * `envr-local` takes precedence over `envr-default`; the script requires at least one to exist at repository root.
-* Some users may not have to create a local copy of `envr-default` - the defaults might work.  Anything that *could* be unique to user's environment should be specified in `envr-default`.
-* The gitignored local copy of `envr-default`, named `envr-local`, provides each user an interface to the environment requirements.
+* envr always reads `envr-default` first, followed by `envr-local` if it exists.  
+  
+  `envr-local` is used to provide the necessary local modifications to environment variables, paths, and aliases.  `envr-default` keys that are not overwritten by `envr-local` will be available as they were defined in `envr-default`.  Users can add keys to their `envr-local`, though it would often be preferred to update `envr-default` as well so that everyone can be benefit from the definitions.
 
 ## Restore Previous Shell Environment (deactivate)
 
 * `unsource`
 
-### Why .ps1
+### Why .ps1?
 
 #$&*%^
 
