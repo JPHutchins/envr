@@ -35,7 +35,7 @@ Deactivate the environment: `unsource`
 
 Note: inline comments are not supported
 
-```toml
+```ini
 [PROJECT_OPTIONS]
 # This sets the environment variable ENVR_PROJECT_NAME for use by the environment
 PROJECT_NAME=coolrepo
