@@ -16,7 +16,7 @@ assertEqual $(pwd) $(echo $ENVR_ROOT)
 
 # cut off the leading characters
 if [[ -n "${BASH:-}" ]] ; then
-    assertEqual "$(echo $PS1 | cut -c 11-)" "(envr)"
+    assertEqual "$(echo $PS1 | cut -c 15-)" "(envr)"
 elif [[ -n "${ZSH_VERSION:-}" ]] ; then
     assertEqual "$(echo $PS1 | cut -c 8-)" "(envr) "
 fi

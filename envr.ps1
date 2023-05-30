@@ -1,9 +1,9 @@
-# envr v0.5.0
+# envr v0.5.1
 # https://www.github.com/JPHutchins/envr
 # https://www.crumpledpaper.tech
 
 # MIT License
-# Copyright (c) 2022 J.P. Hutchins
+# Copyright (c) 2022-2023 J.P. Hutchins
 # License text at the bottom of this source file
 
 # Usage: . ./envr.ps1
@@ -266,7 +266,13 @@ _envr_set_prompt_prefix () {
         else
             _PROMPT="envr"
         fi
-        PS1="\033[0;36m(${_PROMPT}) ${PS1:-}"
+
+        if [[ -n "${BASH:-}" ]] ; then
+            PS1="\[\033[0;36m\](${_PROMPT}) ${PS1:-}"
+        elif [[ -n "${ZSH_VERSION:-}" ]] ; then
+            PS1="\033[0;36m(${_PROMPT}) ${PS1:-}"
+        fi
+        
         export PS1
     fi
 }
