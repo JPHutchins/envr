@@ -23,6 +23,7 @@ assertEqual "$OLD_PATH" "$PATH"
 # test aliases
 assertEqual "$(user_alias)" "PWNED"
 assertEqual "$(hello)" "Hello world!"
+assertEqual "$(with_equals)" "--log-level=NOTICE"
 
 # cut off the leading characters
 if [[ -n "${BASH:-}" ]] ; then

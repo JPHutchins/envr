@@ -556,7 +556,7 @@ function global:parse($config) {
         }
 
         # get key value of entry, if any, e.g. KEY=VALUE
-        $_TEMP_ARRAY = $line.split("=")
+        $_TEMP_ARRAY = $line.split("=", 2)
         $KEY = $_TEMP_ARRAY[0]
         $VALUE = $_TEMP_ARRAY[1]
 
