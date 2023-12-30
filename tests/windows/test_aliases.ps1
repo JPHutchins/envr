@@ -24,6 +24,7 @@ function global:aliases () {
     $TEST_RES += assertEqual "Hello world!" $(hello)
     $TEST_RES += assertEqual "PWNED" $(user_alias)
     $TEST_RES += assertEqual "--log-level=NOTICE" $(with_equals)
+    $TEST_RES += assertEqual "User args" $(args "User args")
 
     unsource
 
