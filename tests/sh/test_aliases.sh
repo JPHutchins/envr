@@ -24,6 +24,7 @@ assertEqual "$OLD_PATH" "$PATH"
 assertEqual "$(user_alias)" "PWNED"
 assertEqual "$(hello)" "Hello world!"
 assertEqual "$(with_equals)" "--log-level=NOTICE"
+assertEqual "$(args User args)" "User args"
 
 # cut off the leading characters
 if [[ -n "${BASH:-}" ]] ; then

@@ -2,3 +2,4 @@
     hello=echo Hello world!
     user_alias=echo PWNED
     with_equals=echo --log-level=NOTICE
+    args=echo
