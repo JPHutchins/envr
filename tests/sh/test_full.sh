@@ -32,7 +32,7 @@ assertNotEqual "$OLD_PS1" "${PS1:-}"
 if [[ -n "${BASH:-}" ]] ; then
     assertEqual "$(echo $PS1 | cut -c 15-)" "(poopsmith)"
 elif [[ -n "${ZSH_VERSION:-}" ]] ; then
-    assertEqual "$(echo $PS1 | cut -c 8-)" "(poopsmith) "
+    assertEqual "$(echo $PS1)" "%F{36}(poopsmith)%F{reset} "
 fi
 
 # test aliases

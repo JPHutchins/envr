@@ -19,7 +19,7 @@ assertEqual "$OLD_ALS" "$(alias)"
 if [[ -n "${BASH:-}" ]] ; then
     assertEqual "$(echo $PS1 | cut -c 15-)" "(envr)"
 elif [[ -n "${ZSH_VERSION:-}" ]] ; then
-    assertEqual "$(echo $PS1 | cut -c 8-)" "(envr) "
+    assertEqual "$(echo $PS1)" "%F{36}(envr)%F{reset} "
 fi
 
 unsource
