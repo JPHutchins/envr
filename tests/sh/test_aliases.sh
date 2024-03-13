@@ -30,7 +30,7 @@ assertEqual "$(args User args)" "User args"
 if [[ -n "${BASH:-}" ]] ; then
     assertEqual "$(echo $PS1 | cut -c 15-)" "(envr)"
 elif [[ -n "${ZSH_VERSION:-}" ]] ; then
-    assertEqual "$(echo $PS1 | cut -c 8-)" "(envr) "
+    assertEqual "$(echo $PS1)" "%F{36}(envr)%F{reset} "
 fi
 
 # some error is getting caught by unsource but it's not apparent in

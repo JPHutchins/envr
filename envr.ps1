@@ -1,4 +1,4 @@
-# envr v0.5.3
+# envr v0.5.4
 # https://www.github.com/JPHutchins/envr
 # https://www.crumpledpaper.tech
 
@@ -270,7 +270,7 @@ _envr_set_prompt_prefix () {
         if [[ -n "${BASH:-}" ]] ; then
             PS1="\[\033[0;36m\](${_PROMPT}) ${PS1:-}"
         elif [[ -n "${ZSH_VERSION:-}" ]] ; then
-            PS1="\033[0;36m(${_PROMPT}) ${PS1:-}"
+            PS1="%F{36}(${_PROMPT})%F{reset} ${PS1:-}"
         fi
         
         export PS1
