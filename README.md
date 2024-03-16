@@ -17,15 +17,34 @@ envr can be used with bash, zsh, and PowerShell in Linux, Windows, and MacOS.  S
 
 # Usage
 
-Activate the environment: `. ./envr.ps1`
-
-Deactivate the environment: `unsource`
+- Activate the environment: `. ./envr.ps1`
+- Deactivate the environment: `unsource`
+- Upgrade to the latest version: 
+  ```
+  wget -O envr.ps1 https://github.com/JPHutchins/envr/releases/latest/download/envr.ps1
+  ```
+- Verify your copy of `envr`:
+  ```
+  wget -O - https://github.com/JPHutchins/envr/releases/latest/download/sha1.sum | shasum --check
+  ```
+  Windows users may compare the SHA1s manually:
+  ```powershell
+  (Invoke-WebRequest https://github.com/JPHutchins/envr/releases/latest/download/sha1.sum).RawContent 
+  (Get-FileHash -Path envr.ps1 -Algorithm SHA1).hash
+  ```
 
 ## Adding envr to Your Repository
 
-* Download and commit `envr.ps1` to the root of your repository
-  * Linux/Mac/Windows (`wget`): `wget https://github.com/JPHutchins/envr/releases/latest/download/envr.ps1`
-  * Windows (no `wget`): `Invoke-WebRequest -OutFile envr.ps1 -Uri https://github.com/JPHutchins/envr/releases/latest/download/envr.ps1`
+* Download and commit `envr.ps1` to the root of your repository.  This routine is also a good way
+  to **upgrade** your `envr.ps1` to the latest version.
+  * Linux/Mac/Windows using `wget`: 
+    ```
+    wget -O envr.ps1 https://github.com/JPHutchins/envr/releases/latest/download/envr.ps1
+    ```
+  * Windows without `wget`: 
+    ```powershell
+    Invoke-WebRequest -OutFile envr.ps1 -Uri https://github.com/JPHutchins/envr/releases/latest/download/envr.ps1
+    ```
 * Create, define and commit `envr-default` to the root of your repository.
 * Modify your `.gitignore` to ignore `envr-local`.
 
