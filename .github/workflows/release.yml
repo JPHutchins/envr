@@ -1,0 +1,30 @@
+name: Release
+permissions:
+  contents: write
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Create SHA1 of envr.ps1
+        run: shasum envr.ps1 > sha1.sum
+
+      - name: Add envr.ps1 to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: envr.ps1
+          tag: ${{ github.ref }}
+
+      - name: Add SHA1 to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: sha1.sum
+          tag: ${{ github.ref }}
