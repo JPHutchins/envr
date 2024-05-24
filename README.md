@@ -18,6 +18,7 @@ envr can be used with bash, zsh, and PowerShell in Linux, Windows, and MacOS.  S
 # Usage
 
 - Activate the environment: `. ./envr.ps1`
+  - You can [alias](#installation) `envr` to `. ./envr.ps1` in your shell profile for convenience
 - Deactivate the environment: `unsource`
 - Upgrade to the latest version: 
   ```
@@ -91,6 +92,27 @@ flash=cmake -GNinja -Bbuild -DBOARD=hrv43 -DCMAKE_BUILD_TYPE=Debug -DLOG_LEVEL=I
 ## Restore Previous Shell Environment (deactivate)
 
 * `unsource`
+
+## Installation
+
+`envr` does not need to be installed, but it can be nice to add the alias `envr`
+to your shell profile, allowing you to activate the environment of the current
+directory with `envr` instead of `. ./envr.ps1`.
+
+### PowerShell
+```powershell
+Add-Content -Path $profile -Value "function envr { . ./envr.ps1 }"
+```
+
+### bash
+```bash
+echo "alias envr='. ./envr.ps1'" >> ~/.bashrc
+```
+
+### zsh
+```bash
+echo "alias envr='. ./envr.ps1'" >> ~/.zshrc
+```
 
 ### Why .ps1?
 
