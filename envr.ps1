@@ -1,12 +1,25 @@
-# envr v0.5.4
+# envr v0.5.5
 # https://www.github.com/JPHutchins/envr
 # https://www.crumpledpaper.tech
 
 # MIT License
-# Copyright (c) 2022-2023 J.P. Hutchins
+# Copyright (c) 2022-2024 JP Hutchins
 # License text at the bottom of this source file
 
 # Usage: . ./envr.ps1
+
+# To "install" envr, add the alias `envr = . ./envr.ps1` to your shell profile.
+# This will allow you to run `envr` instead of `. ./envr.ps1` to activate the 
+# environment defined for the current directory,
+
+# Windows (PowerShell) "installation":
+#   Add-Content -Path $profile -Value "function envr { . ./envr.ps1 }"
+
+# bash "installation":
+#   echo "alias envr='. ./envr.ps1'" >> ~/.bashrc
+
+# zsh "installation":
+#   echo "alias envr='. ./envr.ps1'" >> ~/.zshrc
 
 # The following line is for PowerShell/bash cross compatability.
 # - The bash section shall begin with the delimiter "<#'"
@@ -678,7 +691,7 @@ $global:_ENVR_NEW_ALIASES.GetEnumerator().ForEach({
     function _ENVR_ALIAS_FN_7 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[7]) $args" }
     function _ENVR_ALIAS_FN_8 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[8]) $args" }
     function _ENVR_ALIAS_FN_9 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[9]) $args" }
-    Set-Alias -Name $key -Value "_ENVR_ALIAS_FN_$global:_ALIAS_FN_INDEX"
+    Set-Alias -Name $key -Value "_ENVR_ALIAS_FN_$global:_ALIAS_FN_INDEX" -Scope script
     $global:_ALIAS_FN_INDEX += 1
 })
 
@@ -746,7 +759,7 @@ POWERSHELL_SECTION
 # License text continued
 
 # MIT License
-# Copyright (c) 2022 J.P. Hutchins
+# Copyright (c) 2022-2024 JP Hutchins
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
