@@ -1,4 +1,4 @@
-# envr v0.5.5
+# envr v0.5.6
 # https://www.github.com/JPHutchins/envr
 # https://www.crumpledpaper.tech
 
@@ -529,7 +529,15 @@ function global:unsource ([switch]$NonDestructive) {
 
     if (Get-Variable -Name "ENVR_ROOT" -ErrorAction SilentlyContinue) {
         Remove-Variable -Name ENVR_ROOT -Scope Global -Force
-    } 
+    }
+
+    # Remove project options:
+    if (Test-Path -Path env:ENVR_ROOT) {
+        Remove-Item -Path env:ENVR_ROOT
+    }
+    if (Test-Path -Path env:ENVR_PROJECT_NAME) {
+        Remove-Item -Path env:ENVR_PROJECT_NAME
+    }
 
     # Remove variables leftover from script run
     # $_VAR_REMOVE_LIST = 

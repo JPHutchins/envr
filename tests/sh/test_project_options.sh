@@ -25,5 +25,7 @@ unsource
 
 assertEqual "$OLD_PATH" "$PATH"
 assertEqual "$OLD_ALS" "$(alias)"
+assertEqual "" "$ENVR_PROJECT_NAME"
+assertEqual "" "$ENVR_ROOT"
 
 exit $RES
