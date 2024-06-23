@@ -16,5 +16,8 @@ function global:project_options () {
     $PS1_OUT = prompt 6>&1
     $TEST_RES += assertEqual $OLD_PS1_OUT $PS1_OUT
 
+    $TEST_RES += assertEqual $null $env:ENVR_PROJECT_NAME
+    $TEST_RES += assertEqual $null $env:ENVR_ROOT
+
     return $TEST_RES
 }
