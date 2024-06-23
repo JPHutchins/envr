@@ -12,19 +12,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Create SHA of envr.ps1
-        run: shasum -a 256 envr.ps1 > sha256.sum
-
-      - name: Add envr.ps1 to release
+      - name: 🚀 Add envr.ps1 to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: envr.ps1
           tag: ${{ github.ref }}
 
-      - name: Add SHA to release
+      - name: 🍴 Create SHA of envr.ps1
+        run: shasum -a 256 envr.ps1 > sha256.sum
+
+      - name: 🚀 Add SHA to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: sha256.sum
+          tag: ${{ github.ref }}
+
+      - name: 💿 Install cosign
+        uses: sigstore/cosign-installer@v3.5.0
+
+      - name: 🖋️ Create cosign.bundle
+        run: >
+          cosign sign-blob
+          envr.ps1
+          --bundle envr.ps1.cosign.bundle
+          --yes
+
+      - name: 🚀 Add cosign.bundle to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: envr.ps1.cosign.bundle
           tag: ${{ github.ref }}
