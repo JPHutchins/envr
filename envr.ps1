@@ -1,4 +1,4 @@
-# envr v0.5.5
+# envr v0.5.6
 # https://www.github.com/JPHutchins/envr
 # https://www.crumpledpaper.tech
 
