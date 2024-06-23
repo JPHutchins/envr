@@ -26,12 +26,12 @@ envr can be used with bash, zsh, and PowerShell in Linux, Windows, and MacOS.  S
   ```
 - Verify your copy of `envr`:
   ```
-  wget -O - https://github.com/JPHutchins/envr/releases/latest/download/sha1.sum | shasum --check
+  wget -O - https://github.com/JPHutchins/envr/releases/latest/download/sha256.sum | shasum --check
   ```
-  Windows users may compare the SHA1s manually:
+  Windows users may compare the SHA256s manually:
   ```powershell
-  (Invoke-WebRequest https://github.com/JPHutchins/envr/releases/latest/download/sha1.sum).RawContent 
-  (Get-FileHash -Path envr.ps1 -Algorithm SHA1).hash
+  (Invoke-WebRequest https://github.com/JPHutchins/envr/releases/latest/download/sha256.sum).RawContent 
+  (Get-FileHash -Path envr.ps1 -Algorithm SHA256).hash
   ```
 
 ## Adding envr to Your Repository
