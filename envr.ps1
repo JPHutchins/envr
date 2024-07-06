@@ -1,4 +1,4 @@
-# envr v0.5.6
+# envr v0.5.7
 # https://www.github.com/JPHutchins/envr
 # https://www.crumpledpaper.tech
 
@@ -689,16 +689,16 @@ $global:_ENVR_NEW_ALIASES.GetEnumerator().ForEach({
     $global:_ALIAS_COMMAND_ARR += ,$ExecutionContext.InvokeCommand.ExpandString($val)
 
     # Hack to support aliases with parameters
-    function _ENVR_ALIAS_FN_0 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[0]) $args" }
-    function _ENVR_ALIAS_FN_1 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[1]) $args" }
-    function _ENVR_ALIAS_FN_2 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[2]) $args" }
-    function _ENVR_ALIAS_FN_3 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[3]) $args" }
-    function _ENVR_ALIAS_FN_4 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[4]) $args" }
-    function _ENVR_ALIAS_FN_5 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[5]) $args" }
-    function _ENVR_ALIAS_FN_6 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[6]) $args" }
-    function _ENVR_ALIAS_FN_7 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[7]) $args" }
-    function _ENVR_ALIAS_FN_8 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[8]) $args" }
-    function _ENVR_ALIAS_FN_9 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[9]) $args" }
+    function script:_ENVR_ALIAS_FN_0 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[0]) $args" }
+    function script:_ENVR_ALIAS_FN_1 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[1]) $args" }
+    function script:_ENVR_ALIAS_FN_2 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[2]) $args" }
+    function script:_ENVR_ALIAS_FN_3 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[3]) $args" }
+    function script:_ENVR_ALIAS_FN_4 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[4]) $args" }
+    function script:_ENVR_ALIAS_FN_5 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[5]) $args" }
+    function script:_ENVR_ALIAS_FN_6 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[6]) $args" }
+    function script:_ENVR_ALIAS_FN_7 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[7]) $args" }
+    function script:_ENVR_ALIAS_FN_8 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[8]) $args" }
+    function script:_ENVR_ALIAS_FN_9 { Invoke-Expression "$($global:_ALIAS_COMMAND_ARR[9]) $args" }
     Set-Alias -Name $key -Value "_ENVR_ALIAS_FN_$global:_ALIAS_FN_INDEX" -Scope script
     $global:_ALIAS_FN_INDEX += 1
 })
