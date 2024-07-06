@@ -24,7 +24,7 @@ envr can be used with bash, zsh, and PowerShell in Linux, Windows, and MacOS.  S
   ```
   wget -O envr.ps1 https://github.com/JPHutchins/envr/releases/latest/download/envr.ps1
   ```
-- Verify your copy of `envr`:
+- Verify the integrity of your copy of `envr`:
   ```
   wget -O - https://github.com/JPHutchins/envr/releases/latest/download/sha256.sum | shasum --check
   ```
@@ -33,6 +33,15 @@ envr can be used with bash, zsh, and PowerShell in Linux, Windows, and MacOS.  S
   (Invoke-WebRequest https://github.com/JPHutchins/envr/releases/latest/download/sha256.sum).RawContent 
   (Get-FileHash -Path envr.ps1 -Algorithm SHA256).hash
   ```
+- Verify the authenticity of your copy of `envr` with cosign:
+  > Note: you must install [cosign](https://docs.sigstore.dev/about/overview/).
+  ```
+  wget envr.ps1 https://github.com/JPHutchins/envr/releases/latest/download/envr.ps1.cosign.bundle
+  cosign verify-blob envr.ps1 --bundle envr.ps1.cosign.bundle --certificate-identity https://github.com/JPHutchins/envr/.github/workflows/release.yml@refs/tags/0.5.7 --certificate-oidc-issuer https://token.actions.githubusercontent.com
+  rm envr.ps1.cosign.bundle
+  ```
+  > Note: the section `release.yml@refs/tags/<TAG>` must be updated with the
+  > version that you are verifying.
 
 ## Adding envr to Your Repository
 
