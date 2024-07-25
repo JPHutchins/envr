@@ -722,9 +722,9 @@ $global:_ENVR_PATH_ADDITIONS.GetEnumerator().ForEach({
         exit 1
     }
 
-    if (Test-Path -Path "$env_val") {
+    if (($env_val -ne "") -and (Test-Path -Path "$env_val")) {
         $path_addition = $env_val
-    } elseif (Test-Path -Path "$exp_val") {
+    } elseif (($exp_val -ne "") -and (Test-Path -Path "$exp_val")) {
         $path_addition = $exp_val
     } else {
         Write-Host "WARNING - $key=$env_val is not a directory." -ForegroundColor Yellow
