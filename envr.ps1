@@ -727,9 +727,8 @@ $global:_ENVR_PATH_ADDITIONS.GetEnumerator().ForEach({
     } elseif (Test-Path -Path "$exp_val") {
         $path_addition = $exp_val
     } else {
-        Write-Host "ERROR - $key=$val is not a directory." -ForegroundColor Red
-        unsource
-        exit 1
+        Write-Host "WARNING - $key=$env_val is not a directory." -ForegroundColor Yellow
+        $path_addition = $env_val
     }
     foreach ($folder in $(Get-Item env:path).value.split($([System.IO.Path]::PathSeparator))) {
         if ($folder -eq $path_addition) {
