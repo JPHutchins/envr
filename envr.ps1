@@ -1,4 +1,4 @@
-# envr v0.5.7
+# envr v0.5.8
 # https://www.github.com/JPHutchins/envr
 # https://www.crumpledpaper.tech
 
@@ -708,17 +708,31 @@ $global:_ENVR_PATH_ADDITIONS.GetEnumerator().ForEach({
     $key = $($_.Key)
     $val = $($_.Value)
 
-    # expand the variables
-    if ($null -ne $val) {
-        $val = $ExecutionContext.InvokeCommand.ExpandString($val.Replace('$', '$env:'))
+    if ($null -eq $val) {
+        continue
     }
 
-    if (Test-Path -Path "$val") {
+    # expand the variables - Windows could have $env:<val> or $<val>
+    $env_val = $ExecutionContext.InvokeCommand.ExpandString($val.Replace('$', '$env:'))
+    $exp_val = $ExecutionContext.InvokeCommand.ExpandString($val)
+
+    if (("$env_val" -ne "$exp_val") -and (Test-Path -Path "$env_val") -and (Test-Path -Path "$exp_val")) {
+        Write-Host "ERROR - $key=$val is ambigious because both $env_val and $exp_val are valid paths" -ForegroundColor Red
+        unsource
+        exit 1
+    }
+
+    if (Test-Path -Path "$env_val") {
+        $path_addition = $env_val
+    } elseif (Test-Path -Path "$exp_val") {
+        $path_addition = $exp_val
     } else {
-        Write-Host "WARNING - $key=$val is not a directory." -ForegroundColor Yellow
+        Write-Host "ERROR - $key=$val is not a directory." -ForegroundColor Red
+        unsource
+        exit 1
     }
     foreach ($folder in $(Get-Item env:path).value.split($([System.IO.Path]::PathSeparator))) {
-        if ($folder -eq $val) {
+        if ($folder -eq $path_addition) {
             $duplicate = 1
         }
     }
@@ -726,17 +740,8 @@ $global:_ENVR_PATH_ADDITIONS.GetEnumerator().ForEach({
         continue
     }
 
-    $Env:PATH = "$val$([System.IO.Path]::PathSeparator)$Env:PATH"
+    $Env:PATH = "$path_addition$([System.IO.Path]::PathSeparator)$Env:PATH"
 })
-
-# Activate the python venv if specified
-if (-not $global:_ENVR_PYTHON_VENV -eq "") {
-    if (-not $Env:ENVIRONMENT_DISABLE_PROMPT) {
-        # We're going to set envr prompt; disable the python (venv) prompt
-        Set-Item -Path env:VIRTUAL_ENV_DISABLE_PROMPT -Value "true"
-    }
-    . "$global:_ENVR_PYTHON_VENV/Scripts/Activate.ps1"
-}
 
 # Set the prompt prefix
 if (-not $Env:ENVIRONMENT_DISABLE_PROMPT) {
