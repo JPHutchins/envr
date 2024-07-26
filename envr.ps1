@@ -742,6 +742,15 @@ $global:_ENVR_PATH_ADDITIONS.GetEnumerator().ForEach({
     $Env:PATH = "$path_addition$([System.IO.Path]::PathSeparator)$Env:PATH"
 })
 
+# Activate the python venv if specified
+if (-not $global:_ENVR_PYTHON_VENV -eq "") {
+    if (-not $Env:ENVIRONMENT_DISABLE_PROMPT) {
+        # We're going to set envr prompt; disable the python (venv) prompt
+        Set-Item -Path env:VIRTUAL_ENV_DISABLE_PROMPT -Value "true"
+    }
+    . "$global:_ENVR_PYTHON_VENV/Scripts/Activate.ps1"
+}
+
 # Set the prompt prefix
 if (-not $Env:ENVIRONMENT_DISABLE_PROMPT) {
 
